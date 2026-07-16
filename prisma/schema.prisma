@@ -1,0 +1,199 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BUYER
+  AGENT
+  ADMIN
+}
+
+enum ListingType {
+  HOUSE
+  LAND
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  UNDER_OFFER
+  SOLD
+  RENTED
+  ARCHIVED
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  VIEWING_SCHEDULED
+  CLOSED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  role          Role     @default(BUYER)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  listings      Listing[]      @relation("AgentListings")
+  inquiries     Inquiry[]      @relation("BuyerInquiries")
+  savedListings SavedListing[]
+
+  image    String?
+  sessions Session[]
+  accounts Account[]
+
+  @@map("users")
+}
+
+model Listing {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  description String
+
+  type   ListingType
+  status ListingStatus @default(DRAFT)
+
+  price    Decimal @db.Decimal(14, 2)
+  currency String  @default("NGN")
+
+  // Location
+  address   String
+  city      String
+  state     String
+  country   String @default("Nigeria")
+  latitude  Float?
+  longitude Float?
+  // location  Unsupported("geography(Point, 4326)")  // added via raw SQL migration for PostGIS
+
+  // Type-specific fields live here instead of separate columns/tables.
+  // HOUSE example: { bedrooms: 4, bathrooms: 3, furnished: true, propertySubtype: "duplex" }
+  // LAND example:  { sizeInPlots: 5, titleType: "C of O", surveyPlanAvailable: true }
+  attributes Json
+
+  agentId String
+  agent   User   @relation("AgentListings", fields: [agentId], references: [id])
+
+  images    ListingImage[]
+  inquiries Inquiry[]
+  savedBy   SavedListing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([city, state])
+  @@map("listings")
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  url      String // Cloudinary secure_url
+  publicId String // Cloudinary public_id (for deletion)
+  order    Int     @default(0)
+  isCover  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("listing_images")
+}
+
+model Inquiry {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  buyerId String
+  buyer   User   @relation("BuyerInquiries", fields: [buyerId], references: [id])
+
+  message String
+  status  InquiryStatus @default(NEW)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@map("inquiries")
+}
+
+model SavedListing {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@map("saved_listings")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
