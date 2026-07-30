@@ -11,7 +11,6 @@ import Navbar from './(marketing)/components/Navbar';
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#fafafa]">
-      <Navbar />
       <HeroSection />
       <FeaturedPropertiesSection />
       <ServicesSection />

@@ -5,7 +5,6 @@ import Link from "next/link";
 import AuthInput from "../../../components/AuthInput";
 import { FaGoogle, FaApple, FaFacebookF } from "react-icons/fa";
 import { authClient } from "@/lib/auth/authClient";
-import GoogleSigIn from "../../../components/GoogleSigInButton";
 import GoogleSigInButton from "../../../components/GoogleSigInButton";
 
 export default function LoginPage() {
@@ -51,6 +50,7 @@ export default function LoginPage() {
       >
         <AuthInput
           label="Email"
+          name="email"
           type="email"
           placeholder="Email Address"
           autoComplete="email"
@@ -60,6 +60,7 @@ export default function LoginPage() {
 
         <AuthInput
           label="Password"
+          name="password"
           type={showPassword ? "text" : "password"}
           placeholder="Password"
           autoComplete="current-password"
@@ -75,6 +76,7 @@ export default function LoginPage() {
             <div className="relative">
               <input
                 type="checkbox"
+                name="checkbox"
                 checked={rememberMe}
                 onChange={() => setRememberMe(!rememberMe)}
                 className="sr-only"
@@ -117,7 +119,7 @@ export default function LoginPage() {
 
         <div className="grid grid-cols-3 gap-3 md:gap-4 mb-20 md:mb-24">
           <GoogleSigInButton 
-          onError={(error) => setError(error)} 
+          onError={(error)=> console.log("Error", error)} 
           onSuccess={(result) => console.log("Result", result)}  
           />
 

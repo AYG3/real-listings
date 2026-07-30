@@ -11,7 +11,7 @@ export default function Navbar() {
           ALARA ESTATE
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-500">
-          <Link href="#" className="text-gray-900 border-b-2 border-gray-900 pb-1 -mb-1">Home</Link>
+          <Link href="/" className="text-gray-900 border-b-2 border-gray-900 pb-1 -mb-1">Home</Link>
           <Link href="/buy" className="hover:text-gray-900 transition-colors">Buy</Link>
           <Link href="#" className="hover:text-gray-900 transition-colors">Rent</Link>
           <Link href="#" className="hover:text-gray-900 transition-colors">Land</Link>
