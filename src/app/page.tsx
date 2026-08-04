@@ -6,11 +6,13 @@ import TestimonialsSection from './(marketing)/components/TestimonialsSection';
 import CTASection from './(marketing)/components/CTASection';
 import FooterSection from './(marketing)/components/FooterSection';
 import Navbar from './(marketing)/components/Navbar';
+import { Toaster } from 'sonner';
 
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#fafafa]">
+      <Toaster />
       <HeroSection />
       <FeaturedPropertiesSection />
       <ServicesSection />

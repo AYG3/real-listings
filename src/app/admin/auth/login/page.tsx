@@ -1,8 +1,30 @@
 "use client";
 
+import { useActionState, useEffect } from "react";
 import { AdminLoginForm } from "./AdminLoginForm";
+import { login, type LoginState } from "./actions";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+
 
 export default function LoginPage() {
+  const [state, formAction, isPending] = useActionState(
+    login,
+    null as LoginState,
+  );
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
+    }
+    if (state?.success) {
+      toast.success(state.success);
+      router.push('/admin/overview');
+    }
+  }, [state, router]);
 
   return (
     <>
@@ -11,7 +33,7 @@ export default function LoginPage() {
           Admin Login
         </h1>
       </div>
-      <AdminLoginForm />
+      <AdminLoginForm action={formAction} isPending={isPending} />
     </>
   );
 }

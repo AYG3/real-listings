@@ -1,116 +1,83 @@
 import Link from "next/link";
 import {
   ArrowUpRight,
-  Bell,
   Building2,
   CheckCircle2,
   Clock3,
   Home,
-  ListChecks,
+  MessageSquare,
+  Plus,
   RefreshCw,
-  UserCheck,
-  Users,
 } from "lucide-react";
 
 const stats = [
   {
-    label: "Total listings",
-    value: "312",
-    detail: "+24 this month",
+    label: "My Listings",
+    value: "24",
+    detail: "All time",
     icon: Building2,
     tone: "default",
   },
   {
-    label: "Active listings",
-    value: "248",
-    detail: "79% published",
+    label: "Active Listings",
+    value: "18",
+    detail: "Live on site",
     icon: CheckCircle2,
     tone: "green",
   },
   {
-    label: "Pending listings",
-    value: "17",
-    detail: "Needs review",
+    label: "Pending Approval",
+    value: "3",
+    detail: "Awaiting review",
     icon: Clock3,
     tone: "amber",
   },
   {
-    label: "Total agents",
-    value: "64",
-    detail: "12 verified",
-    icon: UserCheck,
-    tone: "default",
-  },
-  {
-    label: "Pending agent approvals",
-    value: "5",
-    detail: "Oldest: 2 days",
-    icon: Bell,
-    tone: "rose",
-  },
-  {
-    label: "Total buyers",
-    value: "1,204",
-    detail: "+86 this week",
-    icon: Users,
-    tone: "green",
-  },
-  {
-    label: "New inquiries",
-    value: "38",
-    detail: "This week",
-    icon: ListChecks,
+    label: "Total Inquiries",
+    value: "47",
+    detail: "This month",
+    icon: MessageSquare,
     tone: "default",
   },
 ];
 
 const activities = [
   {
-    title: "3-bed duplex submitted in Gwarinpa, Abuja",
-    meta: "by Agent Chidi Okafor",
+    title: "New inquiry on 3-bed duplex, Gwarinpa",
+    meta: "From buyer",
     time: "2h ago",
-    icon: Home,
+    icon: MessageSquare,
   },
   {
-    title: "New agent registered - Blessing Nnamdi",
-    meta: "Port Harcourt",
+    title: "Listing approved — Land parcel, Karu",
+    meta: "Now published",
     time: "5h ago",
-    icon: UserCheck,
+    icon: CheckCircle2,
   },
   {
-    title: "Inquiry on land listing in Lekki Phase 1",
-    meta: "from buyer",
-    time: "8h ago",
-    icon: Bell,
-  },
-  {
-    title: "Land listing submitted in Karu, Abuja",
-    meta: "by Agent Musa Bello",
+    title: "2-bed flat, Lekki Phase 1 — moved to draft",
+    meta: "Status updated",
     time: "1d ago",
-    icon: Building2,
+    icon: Clock3,
+  },
+  {
+    title: "New lead on 4-bed detached, Port Harcourt",
+    meta: "From buyer",
+    time: "2d ago",
+    icon: MessageSquare,
   },
 ];
 
 const quickActions = [
   {
-    label: "Approve agents",
-    href: "/admin/agents/pending",
-    icon: UserCheck,
+    label: "Create/publish a new listing",
+    href: "/agent/listings/create",
+    icon: Plus,
   },
   {
-    label: "Review pending listings",
-    href: "/admin/listings/pending",
-    icon: Clock3,
-  },
-  {
-    label: "View all listings",
-    href: "/admin/listings",
-    icon: Building2,
-  },
-  {
-    label: "Add listing",
-    href: "/admin/upload",
-    icon: Home,
+    label: "View leads",
+    href: "/agent/dashboard",
+    icon: MessageSquare,
   },
 ];
 
@@ -145,17 +112,17 @@ const toneStyles = {
   },
 };
 
-export default function AdminOverviewPage() {
+export default function AgentDashboardPage() {
   return (
-    <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#114b3d]">
-              Admin
+              Agent
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
-              Overview
+              Dashboard
             </h1>
           </div>
 
@@ -205,7 +172,7 @@ export default function AdminOverviewPage() {
                   Recent activity
                 </h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Latest movement across agents, listings, and inquiries.
+                  Latest leads and listing status changes.
                 </p>
               </div>
             </div>
@@ -229,7 +196,8 @@ export default function AdminOverviewPage() {
                         {activity.title}
                       </p>
                       <p className="mt-1 text-sm font-medium text-gray-500">
-                        {activity.meta} <span className="text-gray-300">/</span>{" "}
+                        {activity.meta}{" "}
+                        <span className="text-gray-300">/</span>{" "}
                         {activity.time}
                       </p>
                     </div>
@@ -245,7 +213,7 @@ export default function AdminOverviewPage() {
                 Quick actions
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                Common review and listing workflows.
+                Shortcuts for common tasks.
               </p>
             </div>
 
@@ -278,6 +246,6 @@ export default function AdminOverviewPage() {
           </aside>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

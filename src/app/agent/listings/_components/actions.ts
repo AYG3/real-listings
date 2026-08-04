@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import prisma from "../prisma";
+import prisma from "@/lib/prisma";
 
 const listingStatuses = [
   "DRAFT",
@@ -89,5 +89,5 @@ export async function createListing(formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/listings");
+  revalidatePath("/agent/listings");
 }

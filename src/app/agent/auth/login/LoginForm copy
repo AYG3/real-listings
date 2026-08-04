@@ -1,0 +1,45 @@
+// import { useState } from 'react'
+// import { auth } from '@/lib/auth/auth';
+// import login from '../_components/actions'
+
+
+// function LoginForm() {
+
+    // const [formData, setFormData] = useState({
+    //     email: "",
+    //     password: ""
+    // });
+
+    // const { email, password } = formData
+
+    // const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    //     e.preventDefault();
+
+    //     const { email, password } = formData
+    //     try {
+    //         const result = await auth.api.signInEmail({
+    //           body: {
+    //             email: email,
+    //             password: password,
+    //           },
+    //         });
+    //         console.log("Signed In Sucessfully – result: ", result);
+    //       } catch (error) {
+    //         console.log(error);
+        
+    //         return { error: "Invalid email or password" };
+    //       }
+    // }
+
+//   return (
+//     <div>
+//         <form action={login}>
+//             <input type="email" name="email" value={email} id="" onChange={(e)=> setFormData({...formData, email: e.target.value})} />
+            
+//             <input type="password" name="password" value={password} id="" onChange={(e) => setFormData({...formData, password: e.target.value})} />
+//         </form>
+//     </div>
+//   )
+// }
+
+// export default LoginForm

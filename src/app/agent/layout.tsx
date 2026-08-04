@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
-import AdminNavbar from "./components/AdminNavbar";
+import AgentNav from "./components/AgentNav";
 
-interface AdminLayoutProps {
+interface AgentLayoutProps {
   children: ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AgentLayout({ children }: AgentLayoutProps) {
   return (
     <div className="flex min-h-screen bg-[#f7faf8]">
-      <AdminNavbar />
+      <AgentNav />
       <main className="flex-1">{children}</main>
       <Toaster richColors position="top-right" />
     </div>
