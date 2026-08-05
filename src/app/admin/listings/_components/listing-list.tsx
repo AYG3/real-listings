@@ -105,7 +105,9 @@ export function ListingList({ listings, mode }: ListingListProps) {
             <Home className="h-4 w-4" aria-hidden="true" />
             <select
               value={type}
-              onChange={(event) => setType(event.target.value as ListingType | "all")}
+              onChange={(event) =>
+                setType(event.target.value as ListingType | "all")
+              }
               className="min-w-0 flex-1 bg-transparent outline-none"
             >
               <option value="all">All types</option>
@@ -128,11 +130,19 @@ export function ListingList({ listings, mode }: ListingListProps) {
                 href={`/admin/listings/${listing.id}`}
                 className="flex min-w-0 flex-1 gap-4"
               >
-                <div
-                  className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-lg ${coverStyles[listing.coverTone]}`}
-                >
-                  <Home className="h-8 w-8" aria-hidden="true" />
-                </div>
+                {listing.images?.[0] ? (
+                  <img
+                    src={listing.images[0].url}
+                    alt={listing.title}
+                    className="h-20 w-20 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-lg ${coverStyles[listing.coverTone]}`}
+                  >
+                    <Home className="h-8 w-8" aria-hidden="true" />
+                  </div>
+                )}
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

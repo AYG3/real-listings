@@ -1,9 +1,33 @@
 import Link from "next/link";
 import { Building2, CheckCircle2, Clock3, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
-import { listings, pendingListings, activeListings } from "./_components/listing-data";
+import {
+  listings,
+  pendingListings,
+  activeListings,
+} from "./_components/listing-data";
+import prisma from "@/lib/prisma";
 
-export default function AgentListingsPage() {
+export default async function AgentListingsPage() {
+  // const listings = await prisma.listing.findMany({
+  //where: { agentId: "..." },  // filter by logged-in agent
+  // include: {
+  //   images: { orderBy: { order: "asc" } },
+  // },
+  // orderBy: { createdAt: "desc" },
+  // });
+
+  const rawListings = await prisma.listing.findMany({
+    include: { images: true },
+  });
+
+  const listings = rawListings.map((listing) => ({
+    ...listing,
+    price: listing.price.toNumber(), // Decimal → number
+    createdAt: listing.createdAt.toISOString(), // Date → string
+    updatedAt: listing.updatedAt.toISOString(), // Date → string
+  }));
+
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
@@ -16,7 +40,8 @@ export default function AgentListingsPage() {
               My Listings
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500">
-              Manage your property listings — create, edit, and track their status.
+              Manage your property listings — create, edit, and track their
+              status.
             </p>
           </div>
 

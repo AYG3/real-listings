@@ -19,6 +19,7 @@ export type AdminListing = {
   coverTone: "green" | "amber" | "rose" | "gray";
   description: string;
   amenities: string[];
+  images?: { url: string }[];  
 };
 
 export const listings: AdminListing[] = [

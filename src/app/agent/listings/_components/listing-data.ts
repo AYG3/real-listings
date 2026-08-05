@@ -1,5 +1,8 @@
-export type ListingStatus = "pending" | "published" | "flagged" | "draft";
-export type ListingType = "House" | "Land" | "Apartment";
+// export type ListingStatus = "pending" | "published" | "flagged" | "draft";
+// export type ListingType = "House" | "Land" | "Apartment";
+
+export type ListingStatus = "DRAFT" | "PUBLISHED" | "UNDER_OFFER" | "SOLD" | "RENTED" | "ARCHIVED";
+export type ListingType = "HOUSE" | "LAND";
 
 export type AgentListing = {
   id: string;

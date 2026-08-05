@@ -17,7 +17,9 @@ export default function ListingDetails() {
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <CloudinaryUploadWidget/>
+        <CloudinaryUploadWidget
+        
+        />
         
         <input
           name="bedrooms"

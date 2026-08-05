@@ -48,6 +48,8 @@ export async function createListing(formData: FormData) {
   const title = getString(formData, "title", "Untitled property");
   const attributes: Record<string, string | number | boolean> = {
     negotiable: formData.get("negotiable") === "on",
+
+
   };
 
   for (const key of ["bedrooms", "bathrooms", "toilets", "parking"]) {
@@ -71,7 +73,14 @@ export async function createListing(formData: FormData) {
     }
   }
 
-  await prisma.listing.create({
+  const imageUrls = formData.getAll("imageUrls") as string[];
+  const imagePublicIds = formData.getAll("imagePublicIds") as string[];
+
+  //TEMP TESTING
+  const agent: any = await prisma.user.findFirst();           // ← ADD
+  
+
+  const listing = await prisma.listing.create({
     data: {
       title,
       description: getString(formData, "description", `${title} description`),
@@ -84,10 +93,24 @@ export async function createListing(formData: FormData) {
       state: getString(formData, "state", "State unavailable"),
       country: "Nigeria",
       slug: createSlug(title),
-      agentId: getString(formData, "agentId", "checkers"),
+      // agentId: getString(formData, "agentId", "checkers"),
+      agentId: agent.id ?? "",
       attributes,
     },
   });
+
+  // NEW: create image records
+  if (imageUrls.length > 0) {
+    await prisma.listingImage.createMany({
+      data: imageUrls.map((url, i) => ({
+        listingId: listing.id,
+        url,
+        publicId: imagePublicIds[i] ?? "",
+        order: i,
+        isCover: i === 0,
+      })),
+    });
+  }
 
   revalidatePath("/admin/listings");
 }

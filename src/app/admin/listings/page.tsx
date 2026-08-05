@@ -2,10 +2,23 @@ import Link from "next/link";
 import { ArrowUpRight, Building2, Clock3, Flag, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
 import { listings, pendingListings } from "./_components/listing-data";
+import prisma from "@/lib/prisma";
 
 const flaggedCount = listings.filter((listing) => listing.status === "flagged").length;
 
-export default function ListingsPage() {
+export default async function ListingsPage() {
+
+  const listings = await prisma.listing.findMany({
+    include: {
+      images: { orderBy: { order: "asc" } },
+      agent: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const pendingListings = listings.filter(l => l.status === "DRAFT");
+  const flaggedCount = listings.filter(l => l.status === "FLAGGED").length;
+
   return (
     <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">

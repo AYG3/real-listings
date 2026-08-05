@@ -71,6 +71,10 @@ export async function createListing(formData: FormData) {
     }
   }
 
+
+  //TEMPORARY TO USE ANY USER
+  const agent: any = await prisma.user.findFirst();
+
   await prisma.listing.create({
     data: {
       title,
@@ -84,7 +88,8 @@ export async function createListing(formData: FormData) {
       state: getString(formData, "state", "State unavailable"),
       country: "Nigeria",
       slug: createSlug(title),
-      agentId: getString(formData, "agentId", "checkers"),
+      // agentId: getString(formData, "agentId", "checkers"),
+      agentId: agent.id ?? "",
       attributes,
     },
   });

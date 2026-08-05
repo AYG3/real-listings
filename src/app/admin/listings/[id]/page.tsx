@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { listings } from "../_components/listing-data";
+import prisma from "@/lib/prisma";
 
 type ListingDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -32,15 +33,25 @@ const statusLabels = {
   draft: "Draft",
 };
 
+const listing = listings.find((item) => item.id === id);
+
 export default async function ListingDetailsPage({
   params,
 }: ListingDetailsPageProps) {
   const { id } = await params;
-  const listing = listings.find((item) => item.id === id);
+  // const listing = listings.find((item) => item.id === id);
 
-  if (!listing) {
-    notFound();
-  }
+  // if (!listing) {
+  //   notFound();
+  // }
+
+  const listing = await prisma.listing.findUnique({
+  where: { id },
+  include: {
+    images: { orderBy: { order: "asc" } },
+    agent: { select: { name: true } },
+  },
+});
 
   return (
     <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
@@ -55,8 +66,16 @@ export default async function ListingDetailsPage({
 
         <section className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <div className="flex min-h-80 items-center justify-center bg-[#114b3d] text-white">
-              <Home className="h-24 w-24 opacity-90" aria-hidden="true" />
+            <div className="flex min-h-80 items-center justify-center bg-[#114b3d] text-white overflow-hidden">
+              {listing.images?.[0] ? (
+                <img
+                  src={listing.images[0].url}
+                  alt={listing.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Home className="h-24 w-24 opacity-90" aria-hidden="true" />
+              )}
             </div>
 
             <div className="p-5 sm:p-8">
@@ -81,18 +100,31 @@ export default async function ListingDetailsPage({
 
               <div className="mt-5 grid gap-3 text-sm font-semibold text-gray-600">
                 <InfoLine icon={MapPin} text={`${listing.address}`} />
-                <InfoLine icon={UserRound} text={`Submitted by ${listing.agent}`} />
+                <InfoLine
+                  icon={UserRound}
+                  text={`Submitted by ${listing.agent}`}
+                />
                 <InfoLine
                   icon={Building2}
                   text={`Submitted ${listing.submittedAt}${
-                    listing.publishedAt ? ` / published ${listing.publishedAt}` : ""
+                    listing.publishedAt
+                      ? ` / published ${listing.publishedAt}`
+                      : ""
                   }`}
                 />
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Spec icon={BedDouble} label="Bedrooms" value={listing.bedrooms ?? "-"} />
-                <Spec icon={Bath} label="Bathrooms" value={listing.bathrooms ?? "-"} />
+                <Spec
+                  icon={BedDouble}
+                  label="Bedrooms"
+                  value={listing.bedrooms ?? "-"}
+                />
+                <Spec
+                  icon={Bath}
+                  label="Bathrooms"
+                  value={listing.bathrooms ?? "-"}
+                />
                 <Spec icon={Ruler} label="Size" value={listing.size} />
                 <Spec icon={Home} label="Type" value={listing.type} />
               </div>
@@ -116,7 +148,9 @@ export default async function ListingDetailsPage({
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <article className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="text-xl font-bold text-gray-950">Description</h2>
-            <p className="mt-3 leading-7 text-gray-600">{listing.description}</p>
+            <p className="mt-3 leading-7 text-gray-600">
+              {listing.description}
+            </p>
           </article>
 
           <article className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
@@ -138,13 +172,7 @@ export default async function ListingDetailsPage({
   );
 }
 
-function InfoLine({
-  icon: Icon,
-  text,
-}: {
-  icon: typeof MapPin;
-  text: string;
-}) {
+function InfoLine({ icon: Icon, text }: { icon: typeof MapPin; text: string }) {
   return (
     <p className="flex items-center gap-2">
       <Icon className="h-4 w-4 shrink-0 text-[#114b3d]" aria-hidden="true" />
