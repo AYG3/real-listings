@@ -1,14 +1,52 @@
 import Link from "next/link";
 import { ArrowUpRight, Building2, Clock3, Flag, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
-import { listings, pendingListings } from "./_components/listing-data";
+import type { AdminListing } from "./_components/listing-data";
 import prisma from "@/lib/prisma";
 
-const flaggedCount = listings.filter((listing) => listing.status === "flagged").length;
+function formatPrice(
+  price: { toNumber: () => number },
+  currency: string,
+): string {
+  const num = price.toNumber();
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+function deriveCoverTone(status: string): AdminListing["coverTone"] {
+  switch (status) {
+    case "PUBLISHED":
+      return "green";
+    case "DRAFT":
+      return "gray";
+    case "UNDER_OFFER":
+      return "amber";
+    case "ARCHIVED":
+      return "rose";
+    default:
+      return "gray";
+  }
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export default async function ListingsPage() {
-
-  const listings = await prisma.listing.findMany({
+  const rawListings = await prisma.listing.findMany({
     include: {
       images: { orderBy: { order: "asc" } },
       agent: { select: { name: true } },
@@ -16,8 +54,35 @@ export default async function ListingsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const pendingListings = listings.filter(l => l.status === "DRAFT");
-  const flaggedCount = listings.filter(l => l.status === "FLAGGED").length;
+  const listings: AdminListing[] = rawListings.map((listing) => {
+    const attrs = listing.attributes as Record<string, unknown> | null;
+    return {
+      id: listing.id,
+      title: listing.title,
+      type: listing.type as AdminListing["type"],
+      status: listing.status as AdminListing["status"],
+      price: formatPrice(listing.price, listing.currency),
+      city: listing.city,
+      state: listing.state,
+      address: listing.address,
+      agent: listing.agent.name,
+      submittedAt: formatRelativeTime(listing.createdAt),
+      publishedAt:
+        listing.status === "PUBLISHED"
+          ? formatRelativeTime(listing.updatedAt)
+          : undefined,
+      bedrooms: attrs?.bedrooms as number | undefined,
+      bathrooms: attrs?.bathrooms as number | undefined,
+      size: (attrs?.size as string) ?? "-",
+      coverTone: deriveCoverTone(listing.status),
+      description: listing.description,
+      amenities: (attrs?.amenities as string[]) ?? [],
+      images: listing.images.map((img) => ({ url: img.url })),
+    };
+  });
+
+  const pendingListings = listings.filter((l) => l.status === "DRAFT");
+  const flaggedCount = listings.filter((l) => l.status === "ARCHIVED").length;
 
   return (
     <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
@@ -31,7 +96,8 @@ export default async function ListingsPage() {
               Listings
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500">
-              Review, search, and manage all property listings submitted by agents.
+              Review, search, and manage all property listings submitted by
+              agents.
             </p>
           </div>
 

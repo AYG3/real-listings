@@ -19,17 +19,21 @@ type ListingListProps = {
 };
 
 const statusLabels: Record<ListingStatus, string> = {
-  pending: "Pending",
-  published: "Published",
-  flagged: "Flagged",
-  draft: "Draft",
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  UNDER_OFFER: "Under Offer",
+  SOLD: "Sold",
+  RENTED: "Rented",
+  ARCHIVED: "Archived",
 };
 
 const statusStyles: Record<ListingStatus, string> = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  published: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
-  flagged: "border-rose-200 bg-rose-50 text-rose-700",
-  draft: "border-gray-200 bg-gray-50 text-gray-600",
+  DRAFT: "border-gray-200 bg-gray-50 text-gray-600",
+  PUBLISHED: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
+  UNDER_OFFER: "border-amber-200 bg-amber-50 text-amber-700",
+  SOLD: "border-blue-200 bg-blue-50 text-blue-700",
+  RENTED: "border-purple-200 bg-purple-50 text-purple-700",
+  ARCHIVED: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
 const coverStyles = {
@@ -94,10 +98,12 @@ export function ListingList({ listings, mode }: ListingListProps) {
               disabled={mode === "pending"}
             >
               <option value="all">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="published">Published</option>
-              <option value="flagged">Flagged</option>
-              <option value="draft">Draft</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="UNDER_OFFER">Under Offer</option>
+              <option value="SOLD">Sold</option>
+              <option value="RENTED">Rented</option>
+              <option value="ARCHIVED">Archived</option>
             </select>
           </label>
 
@@ -111,9 +117,8 @@ export function ListingList({ listings, mode }: ListingListProps) {
               className="min-w-0 flex-1 bg-transparent outline-none"
             >
               <option value="all">All types</option>
-              <option value="House">House</option>
-              <option value="Land">Land</option>
-              <option value="Apartment">Apartment</option>
+              <option value="HOUSE">House</option>
+              <option value="LAND">Land</option>
             </select>
           </label>
         </div>
@@ -181,7 +186,7 @@ export function ListingList({ listings, mode }: ListingListProps) {
                   <Eye className="h-4 w-4" aria-hidden="true" />
                   View
                 </Link>
-                {listing.status === "pending" ? (
+                {listing.status === "DRAFT" ? (
                   <button
                     type="button"
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-4 text-sm font-bold text-[#114b3d] transition-colors hover:bg-emerald-50"

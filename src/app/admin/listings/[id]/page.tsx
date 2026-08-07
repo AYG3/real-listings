@@ -12,46 +12,57 @@ import {
   Ruler,
   UserRound,
 } from "lucide-react";
-import { listings } from "../_components/listing-data";
 import prisma from "@/lib/prisma";
+import type { ListingStatus } from "@/prisma/generated/enums";
 
 type ListingDetailsPageProps = {
   params: Promise<{ id: string }>;
 };
 
-const statusStyles = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  published: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
-  flagged: "border-rose-200 bg-rose-50 text-rose-700",
-  draft: "border-gray-200 bg-gray-50 text-gray-600",
+const statusStyles: Record<ListingStatus, string> = {
+  DRAFT: "border-gray-200 bg-gray-50 text-gray-600",
+  PUBLISHED: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
+  UNDER_OFFER: "border-amber-200 bg-amber-50 text-amber-700",
+  SOLD: "border-blue-200 bg-blue-50 text-blue-700",
+  RENTED: "border-purple-200 bg-purple-50 text-purple-700",
+  ARCHIVED: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
-const statusLabels = {
-  pending: "Pending review",
-  published: "Published",
-  flagged: "Flagged",
-  draft: "Draft",
+const statusLabels: Record<ListingStatus, string> = {
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  UNDER_OFFER: "Under Offer",
+  SOLD: "Sold",
+  RENTED: "Rented",
+  ARCHIVED: "Archived",
 };
 
-const listing = listings.find((item) => item.id === id);
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default async function ListingDetailsPage({
   params,
 }: ListingDetailsPageProps) {
   const { id } = await params;
-  // const listing = listings.find((item) => item.id === id);
-
-  // if (!listing) {
-  //   notFound();
-  // }
 
   const listing = await prisma.listing.findUnique({
-  where: { id },
-  include: {
-    images: { orderBy: { order: "asc" } },
-    agent: { select: { name: true } },
-  },
-});
+    where: { id },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      agent: { select: { name: true } },
+    },
+  });
+
+  if (!listing) {
+    notFound();
+  }
+
+  const attributes = listing.attributes as Record<string, unknown> | null;
 
   return (
     <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
@@ -95,20 +106,28 @@ export default async function ListingDetailsPage({
               </h1>
 
               <p className="mt-3 text-2xl font-bold text-[#114b3d]">
-                {listing.price}
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: listing.currency,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(listing.price.toNumber())}
               </p>
 
               <div className="mt-5 grid gap-3 text-sm font-semibold text-gray-600">
-                <InfoLine icon={MapPin} text={`${listing.address}`} />
+                <InfoLine
+                  icon={MapPin}
+                  text={`${listing.address}, ${listing.city}, ${listing.state}`}
+                />
                 <InfoLine
                   icon={UserRound}
-                  text={`Submitted by ${listing.agent}`}
+                  text={`Submitted by ${listing.agent.name}`}
                 />
                 <InfoLine
                   icon={Building2}
-                  text={`Submitted ${listing.submittedAt}${
-                    listing.publishedAt
-                      ? ` / published ${listing.publishedAt}`
+                  text={`Submitted ${formatDate(listing.createdAt)}${
+                    listing.status === "PUBLISHED"
+                      ? ` / published ${formatDate(listing.updatedAt)}`
                       : ""
                   }`}
                 />
@@ -118,19 +137,23 @@ export default async function ListingDetailsPage({
                 <Spec
                   icon={BedDouble}
                   label="Bedrooms"
-                  value={listing.bedrooms ?? "-"}
+                  value={(attributes?.bedrooms as number | string) ?? "-"}
                 />
                 <Spec
                   icon={Bath}
                   label="Bathrooms"
-                  value={listing.bathrooms ?? "-"}
+                  value={(attributes?.bathrooms as number | string) ?? "-"}
                 />
-                <Spec icon={Ruler} label="Size" value={listing.size} />
+                <Spec
+                  icon={Ruler}
+                  label="Size"
+                  value={(attributes?.size as string) ?? "-"}
+                />
                 <Spec icon={Home} label="Type" value={listing.type} />
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                {listing.status === "pending" ? (
+                {listing.status === "DRAFT" ? (
                   <button className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-[#114b3d] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0d3b2f]">
                     <Check className="h-4 w-4" aria-hidden="true" />
                     Publish listing
@@ -156,14 +179,16 @@ export default async function ListingDetailsPage({
           <article className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="text-xl font-bold text-gray-950">Amenities</h2>
             <div className="mt-4 flex flex-wrap gap-2">
-              {listing.amenities.map((amenity) => (
-                <span
-                  key={amenity}
-                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-bold text-[#114b3d]"
-                >
-                  {amenity}
-                </span>
-              ))}
+              {((attributes?.amenities as string[]) ?? []).map(
+                (amenity: string) => (
+                  <span
+                    key={amenity}
+                    className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-bold text-[#114b3d]"
+                  >
+                    {amenity}
+                  </span>
+                ),
+              )}
             </div>
           </article>
         </section>

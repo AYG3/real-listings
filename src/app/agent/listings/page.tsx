@@ -1,32 +1,88 @@
 import Link from "next/link";
 import { Building2, CheckCircle2, Clock3, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
-import {
-  listings,
-  pendingListings,
-  activeListings,
-} from "./_components/listing-data";
+import type { AgentListing } from "./_components/listing-data";
 import prisma from "@/lib/prisma";
 
-export default async function AgentListingsPage() {
-  // const listings = await prisma.listing.findMany({
-  //where: { agentId: "..." },  // filter by logged-in agent
-  // include: {
-  //   images: { orderBy: { order: "asc" } },
-  // },
-  // orderBy: { createdAt: "desc" },
-  // });
+function formatPrice(
+  price: { toNumber: () => number },
+  currency: string,
+): string {
+  const num = price.toNumber();
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+}
 
+function deriveCoverTone(status: string): AgentListing["coverTone"] {
+  switch (status) {
+    case "PUBLISHED":
+      return "green";
+    case "DRAFT":
+      return "gray";
+    case "UNDER_OFFER":
+      return "amber";
+    case "ARCHIVED":
+      return "rose";
+    default:
+      return "gray";
+  }
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+export default async function AgentListingsPage() {
   const rawListings = await prisma.listing.findMany({
-    include: { images: true },
+    include: { images: { orderBy: { order: "asc" } } },
+    orderBy: { createdAt: "desc" },
   });
 
-  const listings = rawListings.map((listing) => ({
-    ...listing,
-    price: listing.price.toNumber(), // Decimal → number
-    createdAt: listing.createdAt.toISOString(), // Date → string
-    updatedAt: listing.updatedAt.toISOString(), // Date → string
-  }));
+  const listings: AgentListing[] = rawListings.map((listing) => {
+    const attrs = listing.attributes as Record<string, unknown> | null;
+    return {
+      id: listing.id,
+      title: listing.title,
+      type: listing.type as AgentListing["type"],
+      status: listing.status as AgentListing["status"],
+      price: formatPrice(listing.price, listing.currency),
+      city: listing.city,
+      state: listing.state,
+      address: listing.address,
+      submittedAt: formatRelativeTime(listing.createdAt),
+      publishedAt:
+        listing.status === "PUBLISHED"
+          ? formatRelativeTime(listing.updatedAt)
+          : undefined,
+      bedrooms: attrs?.bedrooms as number | undefined,
+      bathrooms: attrs?.bathrooms as number | undefined,
+      size:
+        (attrs?.size as string) ??
+        `${(attrs?.sizeInPlots as number) ?? "N/A"} plots`,
+      coverTone: deriveCoverTone(listing.status),
+      description: listing.description,
+      amenities: (attrs?.amenities as string[]) ?? [],
+      images: listing.images.map((img) => ({ url: img.url })),
+    };
+  });
+
+  const pendingCount = rawListings.filter((l) => l.status === "DRAFT").length;
+  const activeCount = rawListings.filter(
+    (l) => l.status === "PUBLISHED",
+  ).length;
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
@@ -64,13 +120,13 @@ export default async function AgentListingsPage() {
           <SummaryCard
             icon={CheckCircle2}
             label="Active listings"
-            value={String(activeListings.length)}
+            value={String(activeCount)}
             detail="Live on site"
           />
           <SummaryCard
             icon={Clock3}
             label="Pending approval"
-            value={String(pendingListings.length)}
+            value={String(pendingCount)}
             detail="Awaiting review"
           />
         </section>

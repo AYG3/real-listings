@@ -1,7 +1,13 @@
 // export type ListingStatus = "pending" | "published" | "flagged" | "draft";
 // export type ListingType = "House" | "Land" | "Apartment";
 
-export type ListingStatus = "DRAFT" | "PUBLISHED" | "UNDER_OFFER" | "SOLD" | "RENTED" | "ARCHIVED";
+export type ListingStatus =
+  | "DRAFT"
+  | "PUBLISHED"
+  | "UNDER_OFFER"
+  | "SOLD"
+  | "RENTED"
+  | "ARCHIVED";
 export type ListingType = "HOUSE" | "LAND";
 
 export type AgentListing = {
@@ -21,14 +27,15 @@ export type AgentListing = {
   coverTone: "green" | "amber" | "rose" | "gray";
   description: string;
   amenities: string[];
+  images?: { url: string }[];
 };
 
 export const listings: AgentListing[] = [
   {
     id: "3-bed-duplex-gwarinpa",
     title: "3-bed duplex, Gwarinpa",
-    type: "House",
-    status: "pending",
+    type: "HOUSE",
+    status: "DRAFT",
     price: "₦85,000,000",
     city: "Abuja",
     state: "FCT",
@@ -45,8 +52,8 @@ export const listings: AgentListing[] = [
   {
     id: "land-parcel-karu",
     title: "Land parcel, Karu",
-    type: "Land",
-    status: "pending",
+    type: "LAND",
+    status: "DRAFT",
     price: "₦12,000,000",
     city: "Abuja",
     state: "FCT",
@@ -61,8 +68,8 @@ export const listings: AgentListing[] = [
   {
     id: "2-bed-flat-lekki-phase-1",
     title: "2-bed flat, Lekki Phase 1",
-    type: "Apartment",
-    status: "draft",
+    type: "HOUSE",
+    status: "DRAFT",
     price: "₦45,000,000",
     city: "Lagos",
     state: "Lagos",
@@ -79,8 +86,8 @@ export const listings: AgentListing[] = [
   {
     id: "5-bed-villa-asokoro",
     title: "5-bed villa, Asokoro",
-    type: "House",
-    status: "published",
+    type: "HOUSE",
+    status: "PUBLISHED",
     price: "₦250,000,000",
     city: "Abuja",
     state: "FCT",
@@ -98,8 +105,8 @@ export const listings: AgentListing[] = [
   {
     id: "3-bed-terrace-ibadan",
     title: "3-bed terrace, Ibadan",
-    type: "House",
-    status: "published",
+    type: "HOUSE",
+    status: "PUBLISHED",
     price: "₦38,000,000",
     city: "Ibadan",
     state: "Oyo",
@@ -117,8 +124,8 @@ export const listings: AgentListing[] = [
   {
     id: "4-bed-detached-ph",
     title: "4-bed detached, Port Harcourt GRA",
-    type: "House",
-    status: "flagged",
+    type: "HOUSE",
+    status: "ARCHIVED",
     price: "₦120,000,000",
     city: "Port Harcourt",
     state: "Rivers",
@@ -135,9 +142,9 @@ export const listings: AgentListing[] = [
 ];
 
 export const pendingListings = listings.filter(
-  (listing) => listing.status === "pending",
+  (listing) => listing.status === "DRAFT",
 );
 
 export const activeListings = listings.filter(
-  (listing) => listing.status === "published",
+  (listing) => listing.status === "PUBLISHED",
 );
