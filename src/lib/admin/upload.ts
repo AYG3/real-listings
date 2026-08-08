@@ -14,6 +14,12 @@ const listingStatuses = [
 
 type ListingStatus = (typeof listingStatuses)[number];
 
+export type CreateListingState = {
+  success?: string;
+  error?: string;
+} | null;
+
+
 function getString(formData: FormData, key: string, fallback = "") {
   const value = formData.get(key);
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -44,8 +50,13 @@ function createSlug(title: string) {
   return `${slug || "listing"}-${Date.now()}`;
 }
 
-export async function createListing(formData: FormData) {
-  const title = getString(formData, "title", "Untitled property");
+export async function createListing(
+  prevState: CreateListingState,
+  formData: FormData
+  ): Promise<CreateListingState> {
+  
+    try {
+    const title = getString(formData, "title", "Untitled property");
   const attributes: Record<string, string | number | boolean> = {
     negotiable: formData.get("negotiable") === "on",
 
@@ -112,5 +123,16 @@ export async function createListing(formData: FormData) {
     });
   }
 
-  revalidatePath("/admin/listings");
+  
+
+  revalidatePath("/admin/listings"); 
+  return {
+    success: "Successfully uploaded listing"
+  }    
+    } catch (error) {
+      return {
+        error: "Failed to upload listing"
+      }
+    }
+  
 }
