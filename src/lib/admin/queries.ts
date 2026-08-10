@@ -27,7 +27,4 @@ export async function getListingById(id: string) {
     },
   });
 }
-
-
-
 //adding filter

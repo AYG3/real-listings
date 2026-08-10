@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import type { ListingStatus } from "@/prisma/generated/enums";
+import ImageGallery from "./image-gallery";
 
 type ListingDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -77,17 +78,10 @@ export default async function ListingDetailsPage({
 
         <section className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <div className="flex min-h-80 items-center justify-center bg-[#114b3d] text-white overflow-hidden">
-              {listing.images?.[0] ? (
-                <img
-                  src={listing.images[0].url}
-                  alt={listing.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <Home className="h-24 w-24 opacity-90" aria-hidden="true" />
-              )}
-            </div>
+          <ImageGallery
+            images={listing.images}   
+            title={listing.title}
+          />
 
             <div className="p-5 sm:p-8">
               <div className="flex flex-wrap items-center gap-3">

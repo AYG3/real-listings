@@ -87,6 +87,10 @@ export async function createListing(
   const imageUrls = formData.getAll("imageUrls") as string[];
   const imagePublicIds = formData.getAll("imagePublicIds") as string[];
 
+console.log("DEBUG imageUrls:", imageUrls);
+console.log("DEBUG imagePublicIds:", imagePublicIds);
+console.log("DEBUG all form keys:", [...formData.keys()]);
+
   //TEMP TESTING
   const agent: any = await prisma.user.findFirst();           // ← ADD
   
@@ -112,7 +116,8 @@ export async function createListing(
 
   // NEW: create image records
   if (imageUrls.length > 0) {
-    await prisma.listingImage.createMany({
+    try{
+      await prisma.listingImage.createMany({
       data: imageUrls.map((url, i) => ({
         listingId: listing.id,
         url,
@@ -121,11 +126,16 @@ export async function createListing(
         isCover: i === 0,
       })),
     });
+    } catch (error) {
+      console.log("Error uploading/creating listing image", error)
+    }
+    
   }
 
   
 
-  revalidatePath("/admin/listings"); 
+  revalidatePath("/admin/listings");
+
   return {
     success: "Successfully uploaded listing"
   }    
