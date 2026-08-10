@@ -54,9 +54,11 @@ function CloudinaryUploadWidget() {
           },
         }}
 
-    onSuccess={( result, {widget} ) => {
+    onSuccess={( result: any, {widget} ) => {
       console.log("Cloudinary Result:",  result)
+      console.log("result: ", result)
       toast.success("Image uploaded successfully")
+      setImages(prev => [...prev, { url: result.info.secure_url, publicId: result.info.public_id}])
     }}
 
     onQueuesEnd={( result, { widget }) => {
@@ -71,10 +73,15 @@ function CloudinaryUploadWidget() {
 
     >
       {({ open, error }) => {
+
+        if (error) {
+          console.log("Cloudnairy error: ", error)
+        }
         return (
-          <button 
+          <button
+          type='button'
           onClick={() => open()}
-          className="bg-[#155d4c] text-sm font-semibold rounded-lg"
+          className="bg-[#155d4c] text-sm font-semibold rounded-lg p-2"
           >
             Upload Listing Images
           </button>
