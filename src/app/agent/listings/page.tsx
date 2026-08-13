@@ -3,6 +3,7 @@ import { Building2, CheckCircle2, Clock3, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
 import type { AgentListing } from "./_components/listing-data";
 import prisma from "@/lib/prisma";
+import { requireAgent } from "@/lib/auth/guards";
 
 function formatPrice(
   price: { toNumber: () => number },
@@ -46,7 +47,13 @@ function formatRelativeTime(date: Date): string {
 }
 
 export default async function AgentListingsPage() {
+  const session = await requireAgent();
+
+  // 2. Query ONLY this agent's listings
   const rawListings = await prisma.listing.findMany({
+    where: {
+      agentId: session?.user.id,
+    },
     include: { images: { orderBy: { order: "asc" } } },
     orderBy: { createdAt: "desc" },
   });

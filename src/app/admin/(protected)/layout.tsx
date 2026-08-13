@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 import AdminNavbar from "./components/AdminNavbar";
+import { requireAdmin } from "@/lib/auth/guards";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default async function AdminLayout({ children }: AdminLayoutProps) {
+
+  await requireAdmin();
+  
   return (
     <div className="flex min-h-screen bg-[#f7faf8]">
       <AdminNavbar />

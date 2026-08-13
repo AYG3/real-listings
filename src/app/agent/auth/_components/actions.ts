@@ -11,6 +11,17 @@ export default async function login(formData: FormData): Promise<any> {
         callbackURL: '/agent/dashboard'
       },
     });
+     // After sign-in, verify the user is actually an AGENT
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role !== "AGENT") {
+      await auth.api.signOut({
+        headers: await headers(),
+      });
+      return { error: "Access denied. This login is for agents only." };
+    }
     console.log("Signed In Sucessfully – result: ", result);
 
   } catch (error) {

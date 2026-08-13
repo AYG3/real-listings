@@ -1,6 +1,8 @@
+import { requireAdmin } from '../auth/guards';
 import prisma from '../prisma'
 
 export async function adminGetListings() {
+  await requireAdmin()
   return prisma.listing.findMany({
     include: {
       images: {
@@ -15,6 +17,7 @@ export async function adminGetListings() {
 }
 
 export async function getListingById(id: string) {
+  await requireAdmin()
   return prisma.listing.findUnique({
     where: { id },
     include: {

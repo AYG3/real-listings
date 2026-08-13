@@ -36,3 +36,5 @@ export interface CreateListingInput {
   agentId: string;
   attributes?: Record<string, unknown>;
 }
+
+export type Role = "BUYER" | "ADMIN" | "AGENT"

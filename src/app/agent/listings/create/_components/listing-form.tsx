@@ -1,6 +1,6 @@
-import BasicInformation from "@/app/admin/(upload)/upload/_components/basic-information";
-import Location from "@/app/admin/(upload)/upload/_components/location";
-import ListingDetails from "@/app/admin/(upload)/upload/_components/listing-details";
+import BasicInformation from "@/app/admin/(protected)/upload/_components/basic-information";
+import Location from "@/app/admin/(protected)/upload/_components/location";
+import ListingDetails from "@/app/admin/(protected)/upload/_components/listing-details";
 import { createListing } from "../../_components/actions";
 
 export default function ListingForm() {
