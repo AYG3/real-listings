@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Toaster } from "sonner";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
         <div className="relative z-10 min-h-[720px] px-6 py-10 sm:px-8 md:px-10">
           {children}
+          <Toaster richColors position="top-right" />
         </div>
       </section>
     </main>

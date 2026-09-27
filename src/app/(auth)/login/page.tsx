@@ -6,6 +6,7 @@ import AuthInput from "../../../components/AuthInput";
 import { FaGoogle, FaApple, FaFacebookF } from "react-icons/fa";
 import { authClient } from "@/lib/auth/authClient";
 import GoogleSigInButton from "../../../components/GoogleSigInButton";
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -30,8 +31,8 @@ export default function LoginPage() {
 
     if (result.error) {
       setError(result.error);
+      // toast.error(result.error.message ?? "Invalid email and password")z
 
-      // return
     }
     setLoading(false);
   };
