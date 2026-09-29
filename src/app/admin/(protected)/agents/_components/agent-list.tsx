@@ -66,8 +66,7 @@ export function AgentList({ agents, mode }: AgentListProps) {
 
       <div className="mt-4 grid gap-4">
         {filteredAgents.map((agent) => (
-          <button
-            type="button"
+          <div
             key={agent.id}
             onClick={() => setSelectedAgent(agent)}
             className="group rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-[#114b3d]/35 hover:bg-emerald-50/40 sm:p-5"
@@ -162,7 +161,7 @@ export function AgentList({ agents, mode }: AgentListProps) {
                 )}
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 

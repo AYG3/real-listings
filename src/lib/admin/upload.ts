@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "../prisma";
+import { toast } from "sonner";
 
 const listingStatuses = [
   "DRAFT",
@@ -135,7 +136,8 @@ console.log("DEBUG all form keys:", [...formData.keys()]);
   
 
   revalidatePath("/admin/listings");
-
+  toast.success("Listing submitted successfully")
+  
   return {
     success: "Successfully uploaded listing"
   }    

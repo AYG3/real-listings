@@ -10,14 +10,7 @@ export default function ListingForm() {
 
   const [state, formAction, isPending] = useActionState(createListing, null as CreateListingState)
 
-  useEffect(() => {
-    if(state?.success) {
-      toast.success('Listing submitted successfully')
-    }
-    else{
-      toast.error("Listing not submitted")
-    }
-  })
+
   return (
     <form
       action={formAction}
