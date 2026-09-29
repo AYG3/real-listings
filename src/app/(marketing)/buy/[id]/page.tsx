@@ -13,9 +13,9 @@ export default async function buy({ params }: ListingDetailsPageProps) {
     })
 
     console.log("Listing: ", listing)
-    return (
-        <div key={listing.id}>
+    // return (
+        // <div key={listing.id}>
 
-        </div>
-    )
+        // </div>
+    // )
 }
