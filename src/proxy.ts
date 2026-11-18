@@ -38,12 +38,13 @@ function withSecurityHeaders(response: NextResponse) {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isPortal = pathname.startsWith("/admin") || pathname.startsWith("/agent");
+  // Segment-aware: `/agents` is the public directory, not the agent portal.
+  const isAdminArea = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isAgentArea = pathname === "/agent" || pathname.startsWith("/agent/");
+  const isPortal = isAdminArea || isAgentArea;
   const isPortalAuth =
     pathname.startsWith("/admin/auth") || pathname.startsWith("/agent/auth");
-  const loginPath = pathname.startsWith("/admin")
-    ? "/admin/auth/login"
-    : "/agent/auth/login";
+  const loginPath = isAdminArea ? "/admin/auth/login" : "/agent/auth/login";
 
   // Optimistic gate: no session cookie means no access to a portal page.
   if (isPortal && !isPortalAuth && !hasSessionCookie(request)) {

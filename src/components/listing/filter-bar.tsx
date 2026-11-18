@@ -34,8 +34,8 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
         method="get"
         className="rounded-card border border-ink-900/10 bg-white p-4 shadow-card"
       >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-          <div className="sm:col-span-2 xl:col-span-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))] xl:grid-cols-[repeat(8,minmax(0,1fr))]">
+          <div className="min-w-0 sm:col-span-2 xl:col-span-2">
             <label htmlFor="filter-q" className={labelClass}>
               Search
             </label>
@@ -49,7 +49,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             />
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-intent" className={labelClass}>
               Purpose
             </label>
@@ -65,7 +65,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-type" className={labelClass}>
               Type
             </label>
@@ -81,7 +81,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-min-price" className={labelClass}>
               Min price
             </label>
@@ -100,7 +100,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-max-price" className={labelClass}>
               Max price
             </label>
@@ -119,7 +119,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-beds" className={labelClass}>
               Beds
             </label>
@@ -138,7 +138,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-state" className={labelClass}>
               State
             </label>
@@ -152,7 +152,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             />
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label htmlFor="filter-sort" className={labelClass}>
               Sort
             </label>
@@ -170,7 +170,7 @@ export function FilterBar({ filters }: { filters: SearchFilters }) {
             </select>
           </div>
 
-          <div className="flex items-end sm:col-span-2 xl:col-span-2">
+          <div className="flex min-w-0 items-end sm:col-span-2 xl:col-span-2">
             <Button type="submit" className="w-full">
               <SlidersHorizontal className="h-4 w-4" aria-hidden />
               Apply filters

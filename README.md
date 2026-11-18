@@ -4,7 +4,7 @@ A three-sided property marketplace for Nigeria: buyers discover verified houses 
 
 Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudinary.
 
-> **Status:** actively being built toward a portfolio-ready release. Foundation work (Phase 0) is complete; discovery, listing detail, and the moderation pipeline are in progress. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
+> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, and public discovery (Phases 0–2) are complete; the enquiry loop is next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
 
 ## Stack
 
@@ -20,20 +20,24 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 
 ## What works today
 
-- Public homepage rendering **real published listings** from the database.
+- **Public discovery:** `/properties` with URL-synced filters (`q`, intent, type, state, city, price band, beds, sort), pagination and active-filter chips. Every combination is a shareable, reloadable URL that works without JavaScript.
+- **Listing detail pages** at `/properties/[slug]` with gallery, type-specific facts (beds/baths/sqm or plots/title/survey), description, agent card and a Google Maps link.
+- **Agent directory** at `/agents` and per-agent profiles at `/agents/[id]`, both reading live data.
+- **Preset routes** `/buy`, `/rent`, `/land` that reuse the results page instead of duplicating queries.
+- **Real counts on the homepage** (`listing.count` + `groupBy`) and a hero search that actually navigates.
 - Email/password and Google sign-in through one role-aware `/login` (a portal deep link like `/admin/overview` sends you there with the right gate).
 - Role-based protection for the agent (`/agent/*`) and admin (`/admin/*`) portals, enforced in the proxy, the layout **and** every server action.
 - Agent listing creation with Cloudinary image upload, ordered images and a cover image. Agent submissions always enter moderation as drafts; only an admin can publish.
 - Admin listing table with search, status filters, and a listing detail view.
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
-- Agent profile and verification screens (UI only; persistence lands in Phase 4).
+- `sitemap.xml` and `robots.txt` generated from the live catalogue.
 
 ## In progress
 
-- Listing detail pages, search, and filters (Phase 2–3).
-- Real dashboards and moderation actions (Phase 4–5).
+- Enquiry loop, saved listings and buyer account pages (Phase 3).
+- Real dashboards and moderation actions (Phases 4–5).
 - One-click, read-only demo mode for reviewers (Phase 6).
-- Automated tests and CI (Phase 7).
+- Automated tests (Phase 7); CI already runs lint, typecheck and build.
 
 ## Getting started
 
@@ -72,6 +76,9 @@ All variables are documented in [`.env.example`](.env.example). The minimum need
 | Admin | `admin@alara.ng` | `AlaraAdmin1!` |
 | Agent | `agent@alara.ng` | `AlaraAgent1!` |
 | Buyer | `buyer@alara.ng` | `AlaraBuyer1!` |
+| Agents (showcase) | `chidi@alara.ng`, `grace@alara.ng`, `musa@alara.ng` | `AlaraAgent1!` |
+
+The seed also creates **18 showcase listings** (16 published, 2 drafts) across Lagos, FCT, Rivers, Oyo, Enugu and Kano — houses and land, sale and rent — plus one or more photos each. Listings upsert by slug, so re-running the seed resets the demo content rather than duplicating it.
 
 Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboard`) redirects there with the required role pre-selected, and a mismatched role is rejected with an inline error. The seed is idempotent — running `npm run db:seed` again will not duplicate users.
 
@@ -93,11 +100,12 @@ Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboa
 ```text
 prisma/
   schema.prisma          Data model (users, listings, images, enquiries, saved listings)
-  seed.ts                Idempotent role seeding
+  seed.ts                Idempotent accounts + showcase listings
+  seed-listings.ts       The showcase dataset (agents + 18 listings)
 src/
   app/
     (auth)/              One /login, /signup, /forgot-password
-    (marketing)/         Public site: home, browse, listing detail
+    (marketing)/         Public site: home, /properties, /properties/[slug], /agents, /agents/[id]
     admin/               Admin portal (protected area; login redirects to /login)
     agent/               Agent portal (protected area + become-an-agent)
     api/auth/            Better Auth handler

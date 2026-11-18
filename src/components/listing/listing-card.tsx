@@ -18,7 +18,13 @@ function asText(value: unknown): string | null {
   return null;
 }
 
-export function ListingCard({ listing }: { listing: ListingCardData }) {
+export function ListingCard({
+  listing,
+  eager = false,
+}: {
+  listing: ListingCardData;
+  eager?: boolean;
+}) {
   const attributes = readAttributes(listing.attributes);
   const cover = listing.images[0];
   const isLand = listing.type === "LAND";
@@ -34,6 +40,8 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
             alt={listing.title}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : undefined}
             className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (

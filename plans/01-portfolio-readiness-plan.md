@@ -23,13 +23,14 @@
 | Phase | Status |
 | --- | --- |
 | **0 — Stabilize the foundation** | ✅ **Complete** (deployment pending credentials) — [details](#phase-0--implementation-progress) |
-| **1 — One brand, one design system** | ✅ **Complete** — [details](#phase-1--implementation-progress) |
-| 2 — Public discovery | ⬜ Not started |
-| 3 — Listing detail + enquiry loop | ⬜ Not started |
+| **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding) — [details](#phase-1--implementation-progress) |
+| **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
+| **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
+| 3 — Listing detail + enquiry loop | ⬜ Not started (detail page shipped early in Phase 2) |
 | 4 — Real agent workspace | ⬜ Not started |
 | 5 — Real admin control tower | ⬜ Not started |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
-| 7 — Engineering credibility | ⬜ Not started |
+| 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
 | 8 — Portfolio packaging & launch | ⬜ Not started |
 
 A one-sentence summary of the strategy:
@@ -73,50 +74,56 @@ Rated 1–5, where 3 = "works for the happy path, fragile", 5 = "production-grad
 | --- | --- | --- |
 | Data model | **4 / 5** | Sensible enums, `attributes Json`, `ListingImage.order/isCover`, `SavedListing` uniqueness, Better Auth tables. Missing agent-verification fields, `publishedAt`, listing intent (sale vs rent), and guest inquiries. |
 | Authentication | **3.5 / 5** | *(Post-Phase 1)* One `AuthShell` + one `CredentialsForm` + one `/login` with a server-verified role gate; portal deep links redirect into it and the duplicated actions/layouts are gone. Still no password reset or email verification. |
-| Public discovery | **1.5 / 5** | Homepage renders real published listings. Everything else — search, filters, detail page, `/rent`, `/land`, `/agents` — is missing or non-functional. |
+| Public discovery | **4 / 5** | *(Post-Phase 2)* URL-driven search with `q`, intent, type, state, city, price band, beds, sort and pagination; filter chips; real listing detail pages with gallery, facts, agent card and map link; `/rent`, `/land`, `/buy` aliases; `/agents` + `/agents/[id]`; 18 seeded listings across six states. Missing: similar listings, ISR, saved-listing button. |
 | Buyer journey | **0.5 / 5** | No saved-listings UI, no inquiry UI, no buyer dashboard. `SavedListing` and `Inquiry` models exist but are never written by the app. |
-| Agent portal | **2.5 / 5** | Listing list is real and correctly scoped to the session user. Create form writes to DB and now uses accessible, labelled fields. But dashboard KPIs are fabricated, Edit/Delete are dead, no inquiry inbox, and the profile form is read-only. |
+| Agent portal | **2.5 / 5** | Listing list is real and scoped to the session user; create persists images and always enters moderation as `DRAFT`. Dashboard KPIs are still fabricated, edit/delete are not implemented, no inquiry inbox, profile form is read-only. |
 | Admin portal | **2 / 5** | Listings list reads the real DB and looks excellent. Agents, pending queues, and overview are hardcoded fixtures; Publish/Flag/Archive buttons have no handlers. |
-| Engineering hygiene | **3.5 / 5** | *(Post-Phase 1)* Build and typecheck pass, 0 ESLint errors, `.env.example` + real README, no placeholder files, error/loading/404 boundaries, one formatter source, no duplicated primitives. Still zero tests and no CI. |
-| Design & brand | **3.5 / 5** | *(Post-Phase 1)* One brand name from `src/lib/brand.ts`, one token palette, zero raw hex in components, one component vocabulary (Button/Field/Card/Badge/Price/EmptyState/Skeleton), unified auth screens. Remaining: lorem-ipsum testimonials and stock photography. |
+| Engineering hygiene | **3.5 / 5** | *(Post-Phase 2)* Build, typecheck and lint pass; CI runs lint/typecheck/build on every push and PR; `.env.example`, real README, error/loading/404 boundaries, one formatter source. Still zero automated tests. |
+| Design & brand | **3.5 / 5** | *(Post-Phase 2)* One brand name, one token palette, zero raw hex, one component vocabulary, real testimonial copy, no dead `href="#"`. Portal screens (agent dashboard, admin fixtures) still lean on default Tailwind palette classes; demo photography is stock. |
 | Security | **3.5 / 5** | *(Post-Phase 0)* Every listing mutation re-checks the role, page-level guards added, security headers applied, debug logging removed. Still no validation library and no rate limiting. |
 | Accessibility & performance | **3 / 5** | *(Post-Phase 1)* Labelled inputs, `role="alert"` errors, `aria-busy` submits, visible `:focus-visible` ring, reduced-motion skeletons, loading/error boundaries. Still 8 raw `<img>` elements and no focus trap in modals. |
 
-**Overall: Stage 3 of 6 on the maturity ladder** — *"authenticated prototype with real read paths"*. Stage 6 is *"portfolio showcase"*.
+**Overall: Stage 3 of 6 on the maturity ladder** — *"authenticated prototype with real read paths"*.
 
-> Phases 0–1 made the build honest, secure, reproducible, and visually coherent — a solid stage 3.5. The ladder position does not move until the **public loop** exists (Phases 2–3), because that is what a reviewer actually experiences.
+> Phases 0–2 and the Step 1 repair make the **discovery** half of the product genuinely walkable: a stranger can search, filter, open a listing and reach an agent. The ladder does not move to stage 4 (*core transaction loop complete*) until Phase 3 lands the enquiry/save loop, because browsing without a way to contact anyone is still a read-only experience.
 
 ```
-1 Scaffold ── 2 Static marketing mock ── 3 ▶ Auth + roles (you are here)
+1 Scaffold ── 2 Static marketing mock ── 3 ▶ Auth + discovery (you are here)
                                                    │
      6 Portfolio showcase ◀── 5 Production-hardened ◀── 4 Core transaction loop complete
 ```
 
 ### 2.2 What genuinely works (protect this)
 
-- `npm run build` succeeds: 24 routes compile, typecheck passes.
+- `npm run build` succeeds: 31 routes compile, typecheck and lint pass.
 - The Prisma schema is a real, defensible design. Enums for lifecycle states, JSON attributes for type-specific fields, explicit image ordering, and a unique constraint on saved listings show product thinking.
 - The admin and agent shells (sidebar, summary cards, empty-state handling) are visually consistent and genuinely well executed.
 - `src/app/agent/(protected)/listings/page.tsx` correctly scopes queries to `session.user.id` — proof you understand multi-tenant reads.
-- Cloudinary upload → DB image records → `next/image` rendering → cover-image selection is a complete vertical slice.
+- Cloudinary upload → DB image records → `next/image` rendering → cover-image selection is a complete vertical slice, and it is now shared by the admin **and** agent create flows.
 - Better Auth role guards (`requireAdmin`, `requireAgent`) are the right shape; they just need to be applied consistently.
+- Public discovery is real: URL-as-state search, server-side Prisma facets, pagination, listing detail pages, agent directory and profiles, `sitemap.xml` + `robots.txt`.
 
 ### 2.3 What is broken or fake
 
 #### Public site
 
-| Issue | Location | Impact |
-| --- | --- | --- |
-| Listing detail page returns nothing (all JSX commented out, `console.log` left in) | [buy/[id]/page.tsx](<../src/app/(marketing)/buy/[id]/page.tsx>) | The single most-clicked page in any property site is blank. Fatal for a demo. |
-| Search bar, "Any Type", "Any Price" are non-interactive divs | [HeroSection.tsx](<../src/app/(marketing)/components/HeroSection.tsx>) | First interaction a recruiter tries. |
-| Nav links `Rent`, `Land`, `Agents` were `href="#"` | [Navbar.tsx](<../src/app/(marketing)/components/Navbar.tsx>) | **Phase 1** removed them — the nav now lists only routes that exist (`/`, `/buy`) and points "List property" at `/agent/auth/register`. Re-add the preset routes in Phase 2. |
-| `/buy` reuses the homepage "Featured Properties" section | [buy/page.tsx](<../src/app/(marketing)/buy/page.tsx>) | No filtering, no pagination; identical to home. |
-| Hero stats ("1500+ Properties / 200+ Agents") contradict admin ("312 listings") and the DB | [HeroSection.tsx](<../src/app/(marketing)/components/HeroSection.tsx>), [overview/page.tsx](<../src/app/admin/(protected)/overview/page.tsx>) | Reviewers notice inconsistent numbers. |
-| "View Details" buttons do not navigate | [FeaturedPropertiesSection.tsx](<../src/app/(marketing)/components/FeaturedPropertiesSection.tsx>) | Dead end. |
-| Prices mixed NGN (DB) and `$1000` (fixtures) | [BestDealsSection.tsx](<../src/app/(marketing)/components/BestDealsSection.tsx>) | **Phase 1** replaced the fixtures with NGN prices and Nigerian cities. Phase 2 removes the section in favour of real data. |
-| Testimonial copy is Swedish lorem ipsum | [TestimonialsSection.tsx](<../src/app/(marketing)/components/TestimonialsSection.tsx>) | Immediately signals "template". |
-| ~~Missing `/images/auth-bg.jpg` referenced by all three auth layouts~~ | ~~`src/app/(auth)/layout.tsx`, `admin/auth/layout.tsx`~~ | **Fixed in Phase 0** — `public/images/auth-bg.svg` + `logo-mark.svg`. |
-| ~~No `loading.tsx`, `error.tsx`, `not-found.tsx`, sitemap, robots, or OG image~~ | ~~repo-wide~~ | **Phase 0** added error / global-error / not-found / loading boundaries and a generated OG image. Sitemap + robots remain → Phase 2/8. |
+**Resolved in Phase 2.** Each row was verified against the running app on 18 November 2026.
+
+| Was | Now |
+| --- | --- |
+| Listing detail page returned nothing | [`/properties/[slug]`](<../src/app/(marketing)/properties/[slug]/page.tsx>) renders gallery, type-specific facts, description, agent card and a Google Maps link; the empty `/buy/[id]` route was deleted |
+| Search inputs were decorative | Hero and results bar are plain `GET` forms that navigate to `/properties?…`, so every combination is shareable and works without JavaScript |
+| Nav pointed at `#` | Buy / Rent / Land / Agents / All properties all resolve to real routes |
+| `/buy` reused the homepage section | `/buy`, `/rent`, `/land` redirect into preset facets of the real results page |
+| Hero stats contradicted the DB | Counts come from `listing.count` + `groupBy`; there are no fabricated numbers on the public site |
+| "View Details" did nothing | Cards are stretched links to the detail page |
+| Mixed `$`/NGN prices | Seed data and formatting are NGN throughout |
+| Swedish lorem-ipsum testimonials | Real, product-specific copy |
+| No sitemap or robots | [`sitemap.ts`](../src/app/sitemap.ts) (8 static routes + every published listing) and [`robots.ts`](../src/app/robots.ts) with portal exclusions |
+| ~~Missing `/images/auth-bg.jpg`~~ | Fixed in Phase 0 — `public/images/auth-bg.svg` + `logo-mark.svg` |
+| ~~No loading / error / 404 boundaries or OG image~~ | Fixed in Phase 0 |
+
+**Still open on the public site:** similar listings, a save/unsave control, the `/demo` CTA, and real photography instead of stock images.
 
 #### Auth & roles
 
@@ -725,13 +732,60 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 
 **Acceptance criteria**
 
-- [ ] Typing "Lekki" and pressing Search returns filtered results from the database.
-- [ ] Reloading a results URL reproduces the exact same view (shareable).
-- [ ] Filtering by intent, type, price band, and beds composes correctly; the URL and UI never disagree.
-- [ ] Every card navigates to a detail page.
-- [ ] Real counts appear on the homepage; no fabricated numbers remain.
-- [ ] Mobile filters usable at 375 px width.
-- [ ] Lighthouse performance ≥ 90 on `/` and `/properties` (mobile).
+- [x] Typing "Lekki" and pressing Search returns filtered results from the database.
+- [x] Reloading a results URL reproduces the exact same view (shareable).
+- [x] Filtering by intent, type, price band, and beds composes correctly; the URL and UI never disagree.
+- [x] Every card navigates to a detail page.
+- [x] Real counts appear on the homepage; no fabricated numbers remain.
+- [x] Mobile filters usable at 375 px width.
+- [ ] Lighthouse performance ≥ 90 on `/` and `/properties` (mobile). **Unmeasured** — no Lighthouse run in this environment.
+
+#### Phase 2 — Implementation progress
+
+**Status: complete** (Lighthouse excepted). Verified 18 November 2026.
+
+| # | Scope item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | Homepage rebuild | ✅ | [HeroSection](../src/app/(marketing)/components/HeroSection.tsx) is a plain `GET` form (`q`, `intent`, `type`, `maxPrice`) that navigates to `/properties`. Counts come from [`getPublicStats`](../src/lib/listing/queries.ts) (`listing.count` + `groupBy`), not fixtures. Featured = 6 newest published listings. The 3-step "how it works" strip, city tiles and `/demo` CTA are **not built** (they depend on Phase 6). |
+| 2 | `/properties` + facets | ✅ | [`properties/page.tsx`](<../src/app/(marketing)/properties/page.tsx>) parses `q`, `intent`, `type`, `state`, `city`, `minPrice`, `maxPrice`, `beds`, `sort`, `page` through [`parseFilters`](../src/lib/listing/filters.ts); Prisma filtering + `skip`/`take` in [`searchListings`](../src/lib/listing/queries.ts); `generateMetadata` builds a per-facet title. |
+| 3 | Filter UI + chips + pagination | ✅ | [`FilterBar`](../src/components/listing/filter-bar.tsx) is a GET form with result count, sort, active-filter chips with individual clear and "Clear all". Responsive grid verified at 375/768/1024/1200/1440 px with no horizontal overflow. *Not* a sticky bar or mobile bottom sheet — the plain card is the shipped pattern. |
+| 4 | Real `ListingCard` | ✅ | [`listing-card.tsx`](../src/components/listing/listing-card.tsx) — `next/image` with `sizes`, status + intent badges, price, location, beds/baths/sqm or plots, whole-card stretched link. First card in each grid uses `loading="eager"` + `fetchPriority="high"`. No save button yet (Phase 3). |
+| 5 | Route aliases | ✅ | [`next.config.ts`](../next.config.ts) returns real 307s: `/buy` → `?intent=sale`, `/rent` → `?intent=rent`, `/land` → `?type=land`. No duplicated query code and no redirect-only page shells. |
+| 6 | `/agents` + `/agents/[id]` | ✅ | [`agents/page.tsx`](<../src/app/(marketing)/agents/page.tsx>) reads real AGENT users with published listings; [`agents/[id]/page.tsx`](<../src/app/(marketing)/agents/[id]/page.tsx>) shows the profile, phone, location and their live inventory via `getAgentProfile`. |
+| 7 | Pagination + empty states | ✅ | `PAGE_SIZE = 12`; "Previous/Next" with page count; empty state with clear-filter actions. |
+| 8 | ISR + performance | ⚠️ Partial | `next/image` everywhere with `sizes`; marketing routes are `force-dynamic` rather than revalidate-based (they read the DB and CI has no database). ISR remains a Phase 6/8 tuning task. |
+| — | Showcase dataset | ✅ | [`prisma/seed-listings.ts`](../prisma/seed-listings.ts): 18 listings (16 published, 2 draft) across Lagos, FCT, Rivers, Oyo, Enugu and Kano — houses and land, sale and rent, NGN pricing, 60–120-word descriptions, 1–3 photos each; 4 agents total. Idempotent by slug; reruns replace images rather than appending. |
+| — | `robots.txt` + `sitemap.xml` | ✅ | [`robots.ts`](../src/app/robots.ts) allows the public site and disallows portals/API; [`sitemap.ts`](../src/app/sitemap.ts) emits 8 static routes + every published listing (26 URLs), `force-dynamic` with a static fallback if the DB is unreachable. |
+
+**Deviations**
+
+| Planned | Delivered | Reason |
+| --- | --- | --- |
+| Sticky filter bar / mobile bottom sheet | Responsive filter card | Keeps the URL-as-state GET form (works without JS); a sheet is a Phase 6 polish item. |
+| `/agents/[id]` + homepage extras (`/demo`, city tiles, how-it-works) | Profile page built; `/demo` deferred | `/demo` is a Phase 6 deliverable; the other strips are content polish. |
+| Real photography | Stock Unsplash imagery | No upload credentials in this environment. The three misleading images (toy house, Nordic cabin, desert road) were removed; flats use interior covers and land uses a field photo. Replacement stays on the Phase 8 content list. |
+
+**Bugs found and fixed while verifying Phase 2**
+
+- **Public `/agents` was gated as a portal.** [`proxy.ts`](../src/proxy.ts) used `pathname.startsWith("/agent")`, which also matched `/agents` and `/agents/[id]`, redirecting anonymous visitors to the agent login. The check is now segment-aware (`/agent` or `/agent/…`), and both public routes return 200 while the portal still redirects.
+- **`next/image` rejected every remote URL with a query string** because `remotePatterns` used the `new URL(...)` shorthand, which pins `search: ""`. Switched to the object form without `search` (see commit `94164f5`).
+- **Agent-created listings lost their images and could self-publish** — fixed in Step 1 below.
+
+---
+
+### Step 1 — Integrity repair
+**Depends on:** Phase 0–1 · **Unblocks:** Phases 3–5
+
+A regression check of the Phase 0–1 work, run before Phase 2 content work began, found four defects that made the later phases untrustworthy. All are fixed and verified.
+
+| Defect | Impact | Fix | Verification |
+| --- | --- | --- | --- |
+| `prisma/seed.ts` had been deleted (and the committed version never created roles) | `npm run db:seed` failed; README's demo accounts did not exist on a fresh database | Restored the idempotent role seed | Seed run 3×: identical output, no duplicate users |
+| Agent create action ignored `imageUrls`/`imagePublicIds` | Agent listings saved with zero photos | New [`images.ts`](../src/lib/listing/images.ts) shared by both create actions | Browser upload → `listing_images` row with `order: 0, isCover: true` |
+| Agent form exposed a Status select and the action trusted it | Agents could publish past moderation | Action forces `DRAFT`; Status select hidden for agents (`showStatus={false}`) | FormData has no `status`; created row is `DRAFT` |
+| Agent rows linked to `/agent/listings/[id]` and `/edit` (404) and inert Duplicate/Delete buttons | Dead ends in the portal | View links to the public page only when published; drafts show "Awaiting review" | Row renders with no dead controls |
+
+Create now redirects to `/agent/listings?created=1` with a "submitted for review" banner.
 
 ---
 
@@ -1086,13 +1140,30 @@ Once the phases are done, the CV and interview story should be grounded in outco
 4. ~~Replace the duplicated `formatPrice` / `formatRelativeTime` helpers with `src/lib/format.ts`.~~ ✅
 5. ~~Unify the auth layouts and collapse the login entry points.~~ ✅
 
-### Next up (Phase 2 — public discovery)
+### Done in Step 1 (integrity repair)
 
-1. Extend the seed with **12+ showcase listings** and 4 agents so the results page has real content from day one. *(1 day)*
-2. Build `/properties` with URL-synced facets (`q`, `intent`, `type`, `state`, `city`, `minPrice`, `maxPrice`, `beds`, `sort`, `page`) and server-side Prisma filtering. *(2 days)*
-3. Build the real `ListingCard` and swap the 8 raw `<img>` elements for `next/image` with correct `sizes`. *(0.5 day)*
-4. Rebuild the homepage hero so the search actually navigates, and replace the fake stats with `prisma.listing.count`. *(1 day)*
-5. Add `/rent`, `/land`, and `/agents` as preset facets of the results page — no duplicated query code. *(0.5 day)*
-6. Replace the hero/testimonial photography and lorem ipsum with real content. *(0.5 day)*
+1. ~~Restore `prisma/seed.ts` so `db:seed` and the documented demo accounts work on a fresh database.~~ ✅
+2. ~~Persist agent-uploaded images through one shared helper used by both create actions.~~ ✅
+3. ~~Force agent submissions to `DRAFT` and hide the Status field from agents.~~ ✅
+4. ~~Remove the 404 detail/edit links and inert Duplicate/Delete buttons; add a submitted-for-review banner.~~ ✅
 
-Deploying to Vercel + Supabase remains the highest-value outstanding item — it turns everything above into something a recruiter can actually open.
+### Done in Phase 2 (public discovery)
+
+1. ~~Seed 18 showcase listings and 4 agents across six states.~~ ✅
+2. ~~Build `/properties` with URL-synced facets and server-side Prisma filtering.~~ ✅
+3. ~~Build the real `ListingCard` with `next/image`, `sizes` and eager loading for the first card.~~ ✅
+4. ~~Rebuild the hero search and replace fake stats with real counts.~~ ✅
+5. ~~Add `/buy`, `/rent`, `/land` aliases plus `/agents` and `/agents/[id]` from real data.~~ ✅
+6. ~~Add `sitemap.xml` and `robots.txt`.~~ ✅
+7. ~~Fix the proxy gating public `/agents` as a portal, and `next/image` rejecting query-string URLs.~~ ✅
+8. ~~Replace lorem-ipsum testimonials with real copy.~~ ✅
+
+### Next up (Phase 3 — listing detail and the enquiry loop)
+
+1. Migration for `intent`, `publishedAt`, guest inquiry fields (`buyerId` nullable, `name`/`email`/`phone`) and agent verification status. *(0.5 day)*
+2. Enquiry form on the listing page that works without login, with validation, honeypot and rate limiting. *(1.5 days)*
+3. Save/unsave with `SavedListing` (optimistic, `localStorage` for guests, merge on login). *(1 day)*
+4. Similar listings (same city + type), JSON-LD and the gallery lightbox. *(1 day)*
+5. Deploy to Vercel + Supabase so the loop can be walked by a stranger. ⏸️ **Blocked — needs account credentials.**
+
+Deploying remains the highest-value outstanding item — it turns everything above into something a recruiter can actually open.

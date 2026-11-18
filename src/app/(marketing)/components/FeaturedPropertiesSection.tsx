@@ -45,10 +45,10 @@ export default async function FeaturedPropertiesSection() {
             />
           </div>
         ) : (
-          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map((listing) => (
+          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+            {listings.map((listing, index) => (
               <li key={listing.id}>
-                <ListingCard listing={listing} />
+                <ListingCard listing={listing} eager={index === 0} />
               </li>
             ))}
           </ul>

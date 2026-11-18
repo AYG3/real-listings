@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Preset facets live on /properties; these are real 307s, not meta-refresh pages.
+  async redirects() {
+    return [
+      { source: "/buy", destination: "/properties?intent=sale", permanent: false },
+      { source: "/rent", destination: "/properties?intent=rent", permanent: false },
+      { source: "/land", destination: "/properties?type=land", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -90,14 +90,14 @@ export default async function AgentsPage() {
               </p>
 
               <Link
-                href={`/properties?q=${encodeURIComponent(agent.name)}`}
+                href={`/agents/${agent.id}`}
                 className={buttonStyles({
                   variant: "secondary",
                   size: "sm",
                   className: "mt-5 self-start",
                 })}
               >
-                View their properties
+                View profile
               </Link>
             </li>
           ))}

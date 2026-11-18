@@ -188,3 +188,47 @@ export async function getAgentDirectory(): Promise<AgentDirectoryEntry[]> {
     };
   });
 }
+
+export type AgentProfile = {
+  id: string;
+  name: string;
+  image: string | null;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  listings: ListingCardData[];
+};
+
+/** A public agent profile: only AGENT accounts with published listings exist. */
+export async function getAgentProfile(
+  id: string,
+): Promise<AgentProfile | null> {
+  const agent = await prisma.user.findFirst({
+    where: { id, role: "AGENT", listings: { some: { status: "PUBLISHED" } } },
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      phone: true,
+      listings: {
+        where: { status: "PUBLISHED" },
+        include: cardInclude,
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  if (!agent) return null;
+
+  const latest = agent.listings[0];
+
+  return {
+    id: agent.id,
+    name: agent.name,
+    image: agent.image,
+    phone: agent.phone,
+    city: latest?.city ?? null,
+    state: latest?.state ?? null,
+    listings: agent.listings,
+  };
+}
