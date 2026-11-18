@@ -14,10 +14,15 @@ const coverToneByStatus: Record<string, AgentListing["coverTone"]> = {
   ARCHIVED: "rose",
 };
 
-export default async function AgentListingsPage() {
-  const session = await requireAgent();
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-  // 2. Query ONLY this agent's listings
+export default async function AgentListingsPage({ searchParams }: PageProps) {
+  const session = await requireAgent();
+  const created = (await searchParams).created === "1";
+
+  // Listings are scoped to the signed-in agent — never to "the first user".
   const rawListings = await prisma.listing.findMany({
     where: {
       agentId: session?.user.id,
@@ -31,6 +36,7 @@ export default async function AgentListingsPage() {
     return {
       id: listing.id,
       title: listing.title,
+      slug: listing.slug,
       type: listing.type as AgentListing["type"],
       status: listing.status as AgentListing["status"],
       price: formatPrice(listing.price, listing.currency),
@@ -84,6 +90,16 @@ export default async function AgentListingsPage() {
             Create Listing
           </Link>
         </header>
+
+        {created ? (
+          <p
+            role="status"
+            className="mt-6 rounded-card border border-success/30 bg-success/5 px-4 py-3 text-sm font-semibold text-forest-800"
+          >
+            Listing submitted for review. An admin will approve it before it
+            appears on the public site.
+          </p>
+        ) : null}
 
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
           <SummaryCard

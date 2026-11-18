@@ -12,6 +12,7 @@ export type ListingType = "HOUSE" | "LAND";
 
 export type AgentListing = {
   id: string;
+  slug?: string;
   title: string;
   type: ListingType;
   status: ListingStatus;

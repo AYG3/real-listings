@@ -1,6 +1,14 @@
 import { Input, Select, Textarea } from "@/components/ui/field";
 
-export default function BasicInformation() {
+/**
+ * `showStatus` is false for agent submissions: agents cannot choose a status,
+ * they always enter moderation as drafts.
+ */
+export default function BasicInformation({
+  showStatus = true,
+}: {
+  showStatus?: boolean;
+}) {
   return (
     <section className="space-y-4">
       <div>
@@ -38,14 +46,16 @@ export default function BasicInformation() {
           <option value="short-let">Short let</option>
         </Select>
 
-        <Select label="Status" name="status" defaultValue="DRAFT">
-          <option value="DRAFT">Draft</option>
-          <option value="PUBLISHED">Published</option>
-          <option value="UNDER_OFFER">Under offer</option>
-          <option value="SOLD">Sold</option>
-          <option value="RENTED">Rented</option>
-          <option value="ARCHIVED">Archived</option>
-        </Select>
+        {showStatus ? (
+          <Select label="Status" name="status" defaultValue="DRAFT">
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="UNDER_OFFER">Under offer</option>
+            <option value="SOLD">Sold</option>
+            <option value="RENTED">Rented</option>
+            <option value="ARCHIVED">Archived</option>
+          </Select>
+        ) : null}
 
         <div className="mb-5 flex items-center pt-7">
           <label className="flex items-center gap-2 text-sm font-medium text-ink-700">

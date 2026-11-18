@@ -23,7 +23,7 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 - Public homepage rendering **real published listings** from the database.
 - Email/password and Google sign-in through one role-aware `/login` (a portal deep link like `/admin/overview` sends you there with the right gate).
 - Role-based protection for the agent (`/agent/*`) and admin (`/admin/*`) portals, enforced in the proxy, the layout **and** every server action.
-- Agent listing creation with Cloudinary image upload, ordered images and a cover image.
+- Agent listing creation with Cloudinary image upload, ordered images and a cover image. Agent submissions always enter moderation as drafts; only an admin can publish.
 - Admin listing table with search, status filters, and a listing detail view.
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
 - Agent profile and verification screens (UI only; persistence lands in Phase 4).

@@ -1,6 +1,8 @@
+import Link from "next/link";
 import BasicInformation from "@/app/admin/(protected)/upload/_components/basic-information";
 import Location from "@/app/admin/(protected)/upload/_components/location";
 import ListingDetails from "@/app/admin/(protected)/upload/_components/listing-details";
+import { buttonStyles } from "@/components/ui/button";
 import { createListing } from "../../_components/actions";
 
 export default function ListingForm() {
@@ -9,22 +11,24 @@ export default function ListingForm() {
       action={createListing}
       className="space-y-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6 lg:p-8"
     >
-      <BasicInformation />
+      <BasicInformation showStatus={false} />
       <Location />
       <ListingDetails />
 
+      <p className="text-sm text-muted-500">
+        Your listing is submitted for review and goes live once an admin
+        approves it.
+      </p>
+
       <div className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium hover:bg-gray-100"
+        <Link
+          href="/agent/listings"
+          className={buttonStyles({ variant: "secondary" })}
         >
           Cancel
-        </button>
+        </Link>
 
-        <button
-          type="submit"
-          className="rounded-lg bg-forest-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-800"
-        >
+        <button type="submit" className={buttonStyles()}>
           Create Property
         </button>
       </div>

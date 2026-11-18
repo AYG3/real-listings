@@ -1,19 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAgent } from "@/lib/auth/guards";
+import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
-
-const listingStatuses = [
-  "DRAFT",
-  "PUBLISHED",
-  "UNDER_OFFER",
-  "SOLD",
-  "RENTED",
-  "ARCHIVED",
-] as const;
-
-type ListingStatus = (typeof listingStatuses)[number];
 
 function getString(formData: FormData, key: string, fallback = "") {
   const value = formData.get(key);
@@ -30,13 +21,6 @@ function getNumber(formData: FormData, key: string) {
 
 function getListingType(formData: FormData) {
   return getString(formData, "type") === "LAND" ? "LAND" : "HOUSE";
-}
-
-function getListingStatus(formData: FormData) {
-  const status = getString(formData, "status", "DRAFT");
-  return listingStatuses.includes(status as ListingStatus)
-    ? (status as ListingStatus)
-    : "DRAFT";
 }
 
 function createSlug(title: string) {
@@ -77,12 +61,14 @@ export async function createListing(formData: FormData) {
     }
   }
 
-  await prisma.listing.create({
+  // Agent submissions always enter moderation as drafts; the client cannot
+  // promote a listing to PUBLISHED from this form.
+  const listing = await prisma.listing.create({
     data: {
       title,
       description: getString(formData, "description", `${title} description`),
       type: getListingType(formData),
-      status: getListingStatus(formData),
+      status: "DRAFT",
       price: getNumber(formData, "price") ?? 0,
       currency: "NGN",
       address: getString(formData, "address", "Address unavailable"),
@@ -95,6 +81,10 @@ export async function createListing(formData: FormData) {
     },
   });
 
+  await attachListingImages(listing.id, readListingImages(formData));
+
   revalidatePath("/agent/listings");
-  revalidatePath("/");
+  revalidatePath("/properties");
+  revalidatePath("/agents");
+  redirect("/agent/listings?created=1");
 }

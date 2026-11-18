@@ -5,14 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  Copy,
   Eye,
   Home,
   MapPin,
-  Pencil,
   Search,
   SlidersHorizontal,
-  Trash2,
 } from "lucide-react";
 import { StatusPill } from "@/components/ui/badge";
 import type { AgentListing, ListingStatus, ListingType } from "./listing-data";
@@ -159,34 +156,19 @@ export function ListingList({ listings }: ListingListProps) {
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
-                <Link
-                  href={`/agent/listings/${listing.id}`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                  View
-                </Link>
-                <Link
-                  href={`/agent/listings/${listing.id}/edit`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                  Edit
-                </Link>
-                <button
-                  type="button"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-                  Duplicate
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-rose-200 bg-white px-3 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-50"
-                >
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Delete
-                </button>
+                {listing.status === "PUBLISHED" && listing.slug ? (
+                  <Link
+                    href={`/properties/${listing.slug}`}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                  >
+                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                    View
+                  </Link>
+                ) : listing.status === "DRAFT" ? (
+                  <span className="inline-flex h-9 items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-500">
+                    Awaiting review
+                  </span>
+                ) : null}
               </div>
             </div>
           </article>

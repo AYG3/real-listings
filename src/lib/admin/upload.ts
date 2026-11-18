@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guards";
+import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "../prisma";
 
 const listingStatuses = [
@@ -88,8 +89,7 @@ export async function createListing(
       }
     }
 
-    const imageUrls = formData.getAll("imageUrls") as string[];
-    const imagePublicIds = formData.getAll("imagePublicIds") as string[];
+    const images = readListingImages(formData);
 
     const listing = await prisma.listing.create({
       data: {
@@ -109,23 +109,10 @@ export async function createListing(
       },
     });
 
-    if (imageUrls.length > 0) {
-      try {
-        await prisma.listingImage.createMany({
-          data: imageUrls.map((url, index) => ({
-            listingId: listing.id,
-            url,
-            publicId: imagePublicIds[index] ?? "",
-            order: index,
-            isCover: index === 0,
-          })),
-        });
-      } catch (error) {
-        console.error("Failed to create listing images", error);
-      }
-    }
+    await attachListingImages(listing.id, images);
 
     revalidatePath("/admin/listings");
+    revalidatePath("/properties");
     revalidatePath("/");
 
     return { success: "Listing uploaded successfully" };
