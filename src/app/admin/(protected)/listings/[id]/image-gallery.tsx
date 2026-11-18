@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
 
@@ -26,13 +28,15 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   };
 
   return (
-    <div className="relative flex min-h-80 items-center justify-center bg-[#114b3d] text-white overflow-hidden">
+    <div className="relative flex min-h-80 items-center justify-center bg-forest-700 text-white overflow-hidden">
       {images.length > 0 ? (
         <>
-          <img
+          <Image
             src={images[current].url}
             alt={`${title} — image ${current + 1} of ${images.length}`}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 55vw, 100vw"
+            className="object-cover"
           />
 
           {/* Left / Right arrows — only when multiple images */}

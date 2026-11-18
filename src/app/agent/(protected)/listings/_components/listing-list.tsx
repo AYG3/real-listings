@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -12,32 +14,15 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
+import { StatusPill } from "@/components/ui/badge";
 import type { AgentListing, ListingStatus, ListingType } from "./listing-data";
 
 type ListingListProps = {
   listings: AgentListing[];
 };
 
-const statusLabels: Record<ListingStatus, string> = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  UNDER_OFFER: "Under Offer",
-  SOLD: "Sold",
-  RENTED: "Rented",
-  ARCHIVED: "Archived",
-};
-
-const statusStyles: Record<ListingStatus, string> = {
-  DRAFT: "border-gray-200 bg-gray-50 text-gray-600",
-  PUBLISHED: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
-  UNDER_OFFER: "border-amber-200 bg-amber-50 text-amber-700",
-  SOLD: "border-blue-200 bg-blue-50 text-blue-700",
-  RENTED: "border-purple-200 bg-purple-50 text-purple-700",
-  ARCHIVED: "border-rose-200 bg-rose-50 text-rose-700",
-};
-
 const coverStyles = {
-  green: "bg-emerald-50 text-[#114b3d]",
+  green: "bg-emerald-50 text-forest-700",
   amber: "bg-amber-50 text-amber-700",
   rose: "bg-rose-50 text-rose-700",
   gray: "bg-gray-100 text-gray-500",
@@ -76,7 +61,7 @@ export function ListingList({ listings }: ListingListProps) {
     <div>
       <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
-          <label className="flex h-12 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 focus-within:border-[#114b3d]/35 focus-within:bg-white">
+          <label className="flex h-12 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 focus-within:border-forest-700/35 focus-within:bg-white">
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <input
               value={query}
@@ -126,14 +111,16 @@ export function ListingList({ listings }: ListingListProps) {
         {filteredListings.map((listing) => (
           <article
             key={listing.id}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-[#114b3d]/35 hover:bg-emerald-50/40 sm:p-5"
+            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-forest-700/35 hover:bg-emerald-50/40 sm:p-5"
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 gap-4">
                 {listing.images?.[0] ? (
-                  <img
+                  <Image
                     src={listing.images[0].url}
                     alt={listing.title}
+                    width={80}
+                    height={80}
                     className="h-20 w-20 shrink-0 rounded-lg object-cover"
                   />
                 ) : (
@@ -150,9 +137,9 @@ export function ListingList({ listings }: ListingListProps) {
                       {listing.title}
                     </h2>
                     <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${statusStyles[listing.status]}`}
+                      className="rounded-full"
                     >
-                      {statusLabels[listing.status]}
+                      <StatusPill status={listing.status} />
                     </span>
                   </div>
 

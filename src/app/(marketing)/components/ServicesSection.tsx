@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function ServicesSection() {
   const services = [
     { 
@@ -29,11 +31,14 @@ export default function ServicesSection() {
           {/* Left Image Component */}
           <div className="w-full lg:w-1/2 relative pr-8 pt-8 px-4 sm:px-0">
             {/* The decorative circle element from the design */}
-            <div className="absolute top-0 right-0 w-24 h-24 border-[6px] border-[#3e8675] rounded-bl-full border-t-0 border-r-0 -mt-2 -mr-2 hidden sm:block"></div>
-            <img 
-              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000" 
-              alt="Modern Building Architecture" 
-              className="w-full h-auto object-cover rounded-sm shadow-sm relative z-10" 
+            <div className="absolute top-0 right-0 w-24 h-24 border-[6px] border-forest-600 rounded-bl-full border-t-0 border-r-0 -mt-2 -mr-2 hidden sm:block"></div>
+            <Image
+              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000"
+              alt="Modern office building"
+              width={1000}
+              height={667}
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="relative z-10 h-auto w-full rounded-card object-cover shadow-card"
             />
           </div>
 
@@ -48,7 +53,7 @@ export default function ServicesSection() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-12 relative">
               {/* Decorative partial circle */}
-              <div className="absolute hidden lg:block -right-10 top-1/2 transform -translate-y-1/2 w-16 h-16 border-[5px] border-[#29685a] rounded-tl-full border-b-0 border-r-0"></div>
+              <div className="absolute hidden lg:block -right-10 top-1/2 transform -translate-y-1/2 w-16 h-16 border-[5px] border-forest-600 rounded-tl-full border-b-0 border-r-0"></div>
 
               {services.map((srv) => (
                 <div key={srv.id} className="relative">

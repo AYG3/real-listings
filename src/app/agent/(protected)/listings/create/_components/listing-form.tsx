@@ -23,7 +23,7 @@ export default function ListingForm() {
 
         <button
           type="submit"
-          className="rounded-lg bg-[#114b3d] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d3b2f]"
+          className="rounded-lg bg-forest-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-800"
         >
           Create Property
         </button>

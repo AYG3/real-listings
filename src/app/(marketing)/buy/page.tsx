@@ -1,10 +1,6 @@
-import React from 'react'
-import FeaturedPropertiesSection from '../components/FeaturedPropertiesSection'
+import { redirect } from "next/navigation";
 
-export default function buy() {
-  return (
-    <div>
-        <FeaturedPropertiesSection />
-    </div>
-  )
+/** Preset facet of the results page — no duplicated query code. */
+export default function BuyPage() {
+  redirect("/properties?intent=sale");
 }

@@ -38,7 +38,7 @@ export function AgentDetailsModal({
       >
         <header className="flex items-center justify-between border-b border-gray-100 px-5 py-5 sm:px-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#114b3d]">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
               Agent profile
             </p>
             <h2
@@ -61,7 +61,7 @@ export function AgentDetailsModal({
 
         <div className="overflow-y-auto px-5 py-6 sm:px-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#114b3d] text-2xl font-bold text-white">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-forest-700 text-2xl font-bold text-white">
               {agent.initials}
             </div>
             <div className="min-w-0">
@@ -93,7 +93,7 @@ export function AgentDetailsModal({
               ID verification
             </p>
             <button className="mt-3 flex min-h-14 w-full items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-4 text-left text-sm font-bold text-gray-900 transition-colors hover:bg-emerald-50">
-              <FileText className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+              <FileText className="h-5 w-5 text-forest-700" aria-hidden="true" />
               {agent.verificationDocument}
             </button>
           </div>
@@ -104,7 +104,7 @@ export function AgentDetailsModal({
             <>
               <button
                 type="button"
-                className="h-12 rounded-md border border-emerald-200 bg-white px-4 text-sm font-bold text-[#114b3d] transition-colors hover:bg-emerald-50"
+                className="h-12 rounded-md border border-emerald-200 bg-white px-4 text-sm font-bold text-forest-700 transition-colors hover:bg-emerald-50"
               >
                 Approve
               </button>
@@ -119,7 +119,7 @@ export function AgentDetailsModal({
             <>
               <button
                 type="button"
-                className="h-12 rounded-md border border-[#114b3d]/20 bg-[#114b3d] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0d3b2f]"
+                className="h-12 rounded-md border border-forest-700/20 bg-forest-700 px-4 text-sm font-bold text-white transition-colors hover:bg-forest-800"
               >
                 View listings
               </button>
@@ -149,7 +149,7 @@ function DetailRow({
   return (
     <div className="grid gap-2 sm:grid-cols-[220px_minmax(0,1fr)] sm:items-center">
       <dt className="flex items-center gap-3 text-sm font-semibold text-gray-500">
-        <Icon className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+        <Icon className="h-5 w-5 text-forest-700" aria-hidden="true" />
         {label}
       </dt>
       <dd className="min-w-0 break-words text-base font-semibold text-gray-950">

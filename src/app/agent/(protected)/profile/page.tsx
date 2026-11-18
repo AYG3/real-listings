@@ -1,3 +1,4 @@
+import { requireAgent } from "@/lib/auth/guards";
 import {
   Building2,
   Mail,
@@ -7,12 +8,13 @@ import {
   UserCircle,
 } from "lucide-react";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  await requireAgent();
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#114b3d]">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
             Agent
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -28,7 +30,7 @@ export default function ProfilePage() {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+                <Building2 className="h-5 w-5 text-forest-700" aria-hidden="true" />
                 <h2 className="text-lg font-semibold text-gray-950">Company</h2>
               </div>
               <p className="mt-1 text-sm text-gray-500">
@@ -45,7 +47,7 @@ export default function ProfilePage() {
                   name="businessName"
                   type="text"
                   placeholder="Your Agency Ltd."
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-950 outline-none placeholder:text-gray-400 focus:border-[#114b3d]"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-950 outline-none placeholder:text-gray-400 focus:border-forest-700"
                 />
               </div>
             </div>
@@ -55,7 +57,7 @@ export default function ProfilePage() {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+                <Mail className="h-5 w-5 text-forest-700" aria-hidden="true" />
                 <h2 className="text-lg font-semibold text-gray-950">Contact Details</h2>
               </div>
               <p className="mt-1 text-sm text-gray-500">
@@ -130,7 +132,7 @@ export default function ProfilePage() {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+                <UserCircle className="h-5 w-5 text-forest-700" aria-hidden="true" />
                 <h2 className="text-lg font-semibold text-gray-950">Profile Picture</h2>
               </div>
               <p className="mt-1 text-sm text-gray-500">
@@ -139,7 +141,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-2xl font-bold text-[#114b3d]">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-2xl font-bold text-forest-700">
                 AG
               </div>
 
@@ -155,7 +157,7 @@ export default function ProfilePage() {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-[#114b3d]" aria-hidden="true" />
+                <Upload className="h-5 w-5 text-forest-700" aria-hidden="true" />
                 <h2 className="text-lg font-semibold text-gray-950">Verification Documents</h2>
               </div>
               <p className="mt-1 text-sm text-gray-500">
@@ -164,7 +166,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-3">
-              <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-sm text-gray-500 transition-colors hover:border-[#114b3d]/35 hover:bg-emerald-50/40">
+              <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-sm text-gray-500 transition-colors hover:border-forest-700/35 hover:bg-emerald-50/40">
                 <Upload className="h-6 w-6" aria-hidden="true" />
                 <span className="font-semibold text-gray-600">
                   Click to upload
@@ -185,7 +187,7 @@ export default function ProfilePage() {
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-[#114b3d] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d3b2f]"
+              className="rounded-lg bg-forest-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-800"
             >
               Save Profile
             </button>

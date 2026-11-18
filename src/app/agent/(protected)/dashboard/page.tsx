@@ -1,10 +1,10 @@
+import { requireAgent } from "@/lib/auth/guards";
 import Link from "next/link";
 import {
   ArrowUpRight,
   Building2,
   CheckCircle2,
   Clock3,
-  Home,
   MessageSquare,
   Plus,
   RefreshCw,
@@ -91,9 +91,9 @@ const toneStyles = {
   },
   green: {
     card: "border-emerald-200 bg-emerald-50/70",
-    icon: "border-emerald-200 bg-white text-[#114b3d]",
+    icon: "border-emerald-200 bg-white text-forest-700",
     label: "text-emerald-800",
-    value: "text-[#114b3d]",
+    value: "text-forest-700",
     detail: "text-emerald-700",
   },
   amber: {
@@ -112,13 +112,14 @@ const toneStyles = {
   },
 };
 
-export default function AgentDashboardPage() {
+export default async function AgentDashboardPage() {
+  await requireAgent();
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#114b3d]">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
               Agent
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -126,7 +127,7 @@ export default function AgentDashboardPage() {
             </h1>
           </div>
 
-          <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#114b3d]/25 bg-white px-4 text-sm font-semibold text-[#114b3d] shadow-sm transition-colors hover:bg-emerald-50 sm:w-auto">
+          <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-forest-700/25 bg-white px-4 text-sm font-semibold text-forest-700 shadow-sm transition-colors hover:bg-emerald-50 sm:w-auto">
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Refresh
           </button>
@@ -188,7 +189,7 @@ export default function AgentDashboardPage() {
                       index === activities.length - 1 ? "" : "border-b border-gray-100"
                     }`}
                   >
-                    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-[#114b3d]">
+                    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-forest-700">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -225,10 +226,10 @@ export default function AgentDashboardPage() {
                   <Link
                     key={action.label}
                     href={action.href}
-                    className="group flex min-h-16 items-center justify-between gap-4 rounded-lg border border-[#114b3d]/20 bg-white px-4 py-3 text-[#114b3d] shadow-sm transition-colors hover:border-[#114b3d]/45 hover:bg-emerald-50"
+                    className="group flex min-h-16 items-center justify-between gap-4 rounded-lg border border-forest-700/20 bg-white px-4 py-3 text-forest-700 shadow-sm transition-colors hover:border-forest-700/45 hover:bg-emerald-50"
                   >
                     <span className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#114b3d] text-white">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-forest-700 text-white">
                         <Icon className="h-4 w-4" aria-hidden="true" />
                       </span>
                       <span className="truncate text-sm font-bold sm:text-base">

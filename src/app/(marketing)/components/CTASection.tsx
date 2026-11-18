@@ -16,7 +16,7 @@ export default function CTASection() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <button className="w-full sm:w-auto bg-[#1c4b40] text-white px-8 py-3.5 rounded-full text-sm font-bold hover:bg-[#113028] transition-colors flex items-center justify-center gap-2">
+              <button className="w-full sm:w-auto bg-forest-600 text-white px-8 py-3.5 rounded-full text-sm font-bold hover:bg-forest-800 transition-colors flex items-center justify-center gap-2">
                 Request a quote <ChevronRight className="w-4 h-4" strokeWidth={3} />
               </button>
               
@@ -33,7 +33,7 @@ export default function CTASection() {
             <div className="relative">
               <div className="w-48 sm:w-64 h-[280px] sm:h-[350px] bg-sky-50 rounded-t-full border-[10px] border-white shadow-2xl overflow-hidden relative z-10 flex border-b-0 justify-center pb-0">
                 {/* Simplified Building Graphic representing the image */}
-                <div className="absolute bottom-0 w-3/4 h-[80%] bg-[#1c4b40] rounded-t-lg mx-auto flex gap-1 p-2">
+                <div className="absolute bottom-0 w-3/4 h-[80%] bg-forest-600 rounded-t-lg mx-auto flex gap-1 p-2">
                   <div className="flex-1 bg-white/20 h-full rounded-sm"></div>
                   <div className="flex-1 bg-white/20 h-full mt-4 rounded-sm"></div>
                   <div className="flex-1 bg-white/20 h-full mt-2 rounded-sm"></div>
@@ -42,7 +42,7 @@ export default function CTASection() {
               </div>
               
               {/* Decorative circle matching design */}
-              <div className="absolute top-1/4 -right-8 w-24 h-24 rounded-full border-[6px] border-[#de8d54] z-0"></div>
+              <div className="absolute top-1/4 -right-8 w-24 h-24 rounded-full border-[6px] border-gold-500 z-0"></div>
             </div>
           </div>
 

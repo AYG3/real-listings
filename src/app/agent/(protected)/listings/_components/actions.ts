@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 
 const listingStatuses = [
@@ -20,7 +21,10 @@ function getString(formData: FormData, key: string, fallback = "") {
 }
 
 function getNumber(formData: FormData, key: string) {
-  const value = Number(getString(formData, key));
+  const raw = getString(formData, key);
+  if (!raw) return undefined;
+
+  const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;
 }
 
@@ -45,6 +49,8 @@ function createSlug(title: string) {
 }
 
 export async function createListing(formData: FormData) {
+  const session = await requireAgent();
+
   const title = getString(formData, "title", "Untitled property");
   const attributes: Record<string, string | number | boolean> = {
     negotiable: formData.get("negotiable") === "on",
@@ -71,10 +77,6 @@ export async function createListing(formData: FormData) {
     }
   }
 
-
-  //TEMPORARY TO USE ANY USER
-  const agent: any = await prisma.user.findFirst();
-
   await prisma.listing.create({
     data: {
       title,
@@ -88,11 +90,11 @@ export async function createListing(formData: FormData) {
       state: getString(formData, "state", "State unavailable"),
       country: "Nigeria",
       slug: createSlug(title),
-      // agentId: getString(formData, "agentId", "checkers"),
-      agentId: agent.id ?? "",
+      agentId: session.user.id,
       attributes,
     },
   });
 
   revalidatePath("/agent/listings");
+  revalidatePath("/");
 }

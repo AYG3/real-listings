@@ -1,6 +1,10 @@
+import Image from "next/image";
+import Link from "next/link";
+import { brand } from "@/lib/brand";
+
 export default function FooterSection() {
   return (
-    <footer className="bg-[#113a30] pt-16 pb-8 text-white">
+    <footer className="bg-forest-900 pt-16 pb-8 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Newsletter Section */}
@@ -10,12 +14,21 @@ export default function FooterSection() {
           </h2>
           
           <div className="w-full md:w-5/12 flex flex-col sm:flex-row gap-0 sm:gap-3 bg-white sm:bg-transparent rounded-sm sm:rounded-none overflow-hidden sm:overflow-visible">
-            <input 
-              type="text" 
-              placeholder="Enter your email" 
-              className="flex-1 bg-white px-5 py-4 text-sm text-gray-900 outline-none w-full sm:rounded-sm border-none" 
+            <label htmlFor="footer-email" className="sr-only">
+              Email address
+            </label>
+            <input
+              id="footer-email"
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder="Enter your email"
+              className="w-full flex-1 border-none bg-white px-5 py-4 text-sm text-ink-900 outline-none sm:rounded-control"
             />
-            <button className="bg-transparent border border-white/30 text-white px-8 py-4 sm:py-0 text-sm font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto h-full sm:rounded-sm">
+            <button
+              type="button"
+              className="h-full w-full border border-white/30 bg-transparent px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:rounded-control sm:py-0"
+            >
               Subscribe
             </button>
           </div>
@@ -26,50 +39,81 @@ export default function FooterSection() {
           
           {/* Brand & Description */}
           <div className="lg:col-span-2 pr-0 lg:pr-12">
-            <div className="flex items-center gap-3 mb-6">
-              {/* Logo shape representation */}
-              <div className="flex flex-col gap-1 w-6 items-start">
-                <div className="w-full h-1 bg-white"></div>
-                <div className="w-4 h-1 bg-white"></div>
-                <div className="w-2 h-1 bg-white"></div>
-              </div>
-              <span className="text-xl font-bold tracking-widest uppercase">TRUST-ESTATE</span>
+            <div className="mb-6 flex items-center gap-3">
+              <Image
+                src="/logo-mark.svg"
+                alt=""
+                width={32}
+                height={32}
+                className="rounded-control"
+              />
+              <span className="text-xl font-bold uppercase tracking-[0.18em]">
+                {brand.name}
+              </span>
             </div>
-            <p className="text-[13px] text-white/60 leading-loose font-medium max-w-sm">
-              A place where you can find your dream home. We provide all kinds of estate service personalized just for you.
+            <p className="max-w-sm text-[13px] font-medium leading-loose text-white/60">
+              {brand.description}
             </p>
           </div>
 
           {/* About Us */}
           <div>
             <h4 className="font-bold mb-6 text-sm">About Us</h4>
-            <ul className="space-y-4 text-[13px] text-white/50 font-medium">
-              <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Our Services</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">How It Works</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Become a Partner</a></li>
+            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+              <li>
+                <Link href="/buy" className="transition-colors hover:text-white">
+                  Browse properties
+                </Link>
+              </li>
+              <li>
+                <Link href="/agent/auth/register" className="transition-colors hover:text-white">
+                  Become an agent
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className="transition-colors hover:text-white">
+                  Sign in
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className="transition-colors hover:text-white">
+                  Create an account
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Community */}
           <div>
             <h4 className="font-bold mb-6 text-sm">Community</h4>
-            <ul className="space-y-4 text-[13px] text-white/50 font-medium">
-              <li><a href="#" className="hover:text-white transition-colors">Token</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Discussion</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Voting</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+              <li>
+                <a href={`mailto:${brand.supportEmail}`} className="transition-colors hover:text-white">
+                  Contact support
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${brand.supportEmail}?subject=Password%20reset`} className="transition-colors hover:text-white">
+                  Password help
+                </a>
+              </li>
             </ul>
           </div>
 
           {/* Social Media */}
           <div>
             <h4 className="font-bold mb-6 text-sm">Social Media</h4>
-            <ul className="space-y-4 text-[13px] text-white/50 font-medium">
-              <li><a href="#" className="hover:text-white transition-colors">Instagram</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Facebook</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Twitter</a></li>
+            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+              <li>
+                <Link href="/login" className="transition-colors hover:text-white">
+                  Agent portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/login?next=/admin/overview" className="transition-colors hover:text-white">
+                  Admin portal
+                </Link>
+              </li>
             </ul>
           </div>
 

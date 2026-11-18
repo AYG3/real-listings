@@ -20,7 +20,7 @@ type AgentListProps = {
 };
 
 const statusStyles: Record<AgentStatus, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-[#114b3d]",
+  active: "border-emerald-200 bg-emerald-50 text-forest-700",
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   rejected: "border-rose-200 bg-rose-50 text-rose-700",
 };
@@ -53,7 +53,7 @@ export function AgentList({ agents, mode }: AgentListProps) {
   return (
     <>
       <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-        <label className="flex h-12 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 focus-within:border-[#114b3d]/35 focus-within:bg-white">
+        <label className="flex h-12 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 focus-within:border-forest-700/35 focus-within:bg-white">
           <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
           <input
             value={query}
@@ -69,11 +69,11 @@ export function AgentList({ agents, mode }: AgentListProps) {
           <div
             key={agent.id}
             onClick={() => setSelectedAgent(agent)}
-            className="group rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-[#114b3d]/35 hover:bg-emerald-50/40 sm:p-5"
+            className="group rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-forest-700/35 hover:bg-emerald-50/40 sm:p-5"
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#114b3d] text-lg font-bold text-white">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-forest-700 text-lg font-bold text-white">
                   {agent.initials}
                 </div>
 
@@ -126,7 +126,7 @@ export function AgentList({ agents, mode }: AgentListProps) {
                     <button
                       type="button"
                       onClick={(event) => event.stopPropagation()}
-                      className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-4 text-sm font-bold text-[#114b3d] transition-colors hover:bg-emerald-50"
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-4 text-sm font-bold text-forest-700 transition-colors hover:bg-emerald-50"
                     >
                       <Check className="h-4 w-4" aria-hidden="true" />
                       Approve
@@ -185,7 +185,7 @@ function AgentMetric({
 }) {
   return (
     <div className="min-w-0">
-      <Icon className="mx-auto h-4 w-4 text-[#114b3d]" aria-hidden="true" />
+      <Icon className="mx-auto h-4 w-4 text-forest-700" aria-hidden="true" />
       <p className="mt-1 truncate text-[11px] font-semibold text-gray-500">
         {label}
       </p>

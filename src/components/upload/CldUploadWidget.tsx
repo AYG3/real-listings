@@ -1,13 +1,19 @@
 "use client"
 
+import Image from "next/image";
 import { CldUploadWidget } from 'next-cloudinary';
+import type {
+  CloudinaryUploadWidgetError,
+  CloudinaryUploadWidgetResults,
+} from 'next-cloudinary';
 import { toast } from 'sonner';
+import { brand } from "@/lib/brand";
 import { useState } from 'react';
 
 
 interface UploadedImage {
   url: string
-  publicId: String | any
+  publicId: string
 }
 
 function CloudinaryUploadWidget() {
@@ -44,44 +50,42 @@ function CloudinaryUploadWidget() {
     options={{
           styles: {
             palette: {
-              window: "#FFFFFF", windowBorder: "#E5E7EB", tabIcon: "#114b3d",
-              menuIcons: "#114b3d", textDark: "#111827", textLight: "#FFFFFF",
-              link: "#114b3d", action: "#114b3d", inactiveTabIcon: "#6B7280",
-              error: "#DC2626", inProgress: "#114b3d", complete: "#16A34A",
-              sourceBg: "#F9FAFB",
+              window: brand.colors.white, windowBorder: brand.colors.ivory100, tabIcon: brand.colors.forest700,
+              menuIcons: brand.colors.forest700, textDark: brand.colors.ink900, textLight: brand.colors.white,
+              link: brand.colors.forest700, action: brand.colors.forest700, inactiveTabIcon: brand.colors.muted500,
+              error: brand.colors.danger, inProgress: brand.colors.forest700, complete: brand.colors.success,
+              sourceBg: brand.colors.ivory50,
             },
             frame: { borderRadius: "24px" },
           },
         }}
 
-    onSuccess={( result: any, {widget} ) => {
-      console.log("Cloudinary Result:",  result)
-      console.log("result: ", result)
+    onSuccess={(result: CloudinaryUploadWidgetResults) => {
+      const info = result.info;
+      if (!info || typeof info === "string") {
+        return;
+      }
+
       toast.success("Image uploaded successfully")
-      setImages(prev => [...prev, { url: result.info.secure_url, publicId: result.info.public_id}])
+      setImages(prev => [...prev, { url: info.secure_url, publicId: info.public_id }])
     }}
 
-    onQueuesEnd={( result, { widget }) => {
-      console.log("All Uploads complete")
+    onQueuesEnd={(_, { widget }) => {
       widget.close()
     }}
 
-    onError={(error: any, {widget}) => {
-      console.log("Cloudinary Error: ", error)
-      toast.error(error.toString() || "Image upload failed")
+    onError={(error: CloudinaryUploadWidgetError) => {
+      const message = typeof error === "string" ? error : error?.statusText;
+      toast.error(message || "Image upload failed")
     }}
 
     >
-      {({ open, error }) => {
-
-        if (error) {
-          console.log("Cloudnairy error: ", error)
-        }
+      {({ open }) => {
         return (
           <button
           type='button'
           onClick={() => open()}
-          className="bg-[#155d4c] text-sm font-semibold rounded-lg p-2"
+          className="bg-forest-600 text-sm font-semibold rounded-lg p-2"
           >
             Upload Listing Images
           </button>
@@ -94,10 +98,12 @@ function CloudinaryUploadWidget() {
         <div className="flex gap-2 flex-wrap">
           {images.map((img, i) => (
             <div key={img.publicId} className="relative group">
-              <img
+              <Image
                 src={img.url}
                 alt={`Upload ${i + 1}`}
-                className="h-20 w-20 object-cover rounded-lg border"
+                width={80}
+                height={80}
+                className="h-20 w-20 rounded-lg object-cover"
               />
               <button
                 type="button"

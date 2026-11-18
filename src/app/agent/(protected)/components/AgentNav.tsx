@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { brand } from "@/lib/brand";
+import { initials } from "@/lib/format";
 import {
   LayoutDashboard,
-  ListChecks,
   Menu,
   UserCircle,
   Home,
@@ -18,7 +19,11 @@ const navItems = [
   { label: "Profile", href: "/agent/profile", icon: UserCircle },
 ];
 
-export default function AgentNav() {
+export default function AgentNav({
+  user,
+}: {
+  user: { name: string; email: string };
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -50,10 +55,10 @@ export default function AgentNav() {
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-100 px-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#114b3d] text-sm font-bold text-white">
-              A
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-forest-700 text-sm font-bold text-white">
+              {brand.name.charAt(0)}
             </div>
-            <span className="text-sm font-bold text-gray-950">Agent Portal</span>
+            <span className="text-sm font-bold text-gray-950">{brand.name}</span>
           </div>
 
           {/* Mobile close button */}
@@ -79,7 +84,7 @@ export default function AgentNav() {
                     onClick={() => setOpen(false)}
                     className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors ${
                       isActive
-                        ? "bg-emerald-50 text-[#114b3d]"
+                        ? "bg-emerald-50 text-forest-700"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-950"
                     }`}
                   >
@@ -94,16 +99,14 @@ export default function AgentNav() {
 
         <div className="border-t border-gray-100 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-[#114b3d]">
-              AG
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-forest-700">
+              {initials(user.name)}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-gray-950">
-                Agent
+                {user.name}
               </p>
-              <p className="truncate text-xs text-gray-500">
-                agent@example.com
-              </p>
+              <p className="truncate text-xs text-gray-500">{user.email}</p>
             </div>
           </div>
         </div>

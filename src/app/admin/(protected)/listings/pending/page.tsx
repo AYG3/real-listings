@@ -1,15 +1,17 @@
+import { requireAdmin } from "@/lib/auth/guards";
 import Link from "next/link";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import { ListingList } from "../_components/listing-list";
 import { pendingListings } from "../_components/listing-data";
 
-export default function PendingListingsPage() {
+export default async function PendingListingsPage() {
+  await requireAdmin();
   return (
-    <main className="min-h-screen bg-[#f7faf8] px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#114b3d]">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
               Listings
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -33,7 +35,7 @@ export default function PendingListingsPage() {
 
             <Link
               href="/admin/listings"
-              className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#114b3d] hover:text-[#0d3b2f]"
+              className="inline-flex items-center justify-center gap-2 text-sm font-bold text-forest-700 hover:text-forest-800"
             >
               View all listings
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />

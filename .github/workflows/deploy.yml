@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    # Only deploy when CI passed on main, or when triggered by hand.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runtime env vars live in the Vercel project (Project → Settings →
+      # Environment Variables). Set these there before the first deploy:
+      #   DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET,
+      #   BETTER_AUTH_URL (the production URL), TRUSTED_ORIGINS,
+      #   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, NEXT_PUBLIC_CLOUDINARY_API_KEY,
+      #   CLOUDINARY_API_SECRET, and optionally GOOGLE_CLIENT_ID/SECRET.
+      #
+      # Repository secrets required by this workflow:
+      #   VERCEL_TOKEN   — create at https://vercel.com/account/tokens
+      #   VERCEL_ORG_ID  — from `vercel link`, stored in .vercel/project.json
+      #   VERCEL_PROJECT_ID — same file
+      - name: Deploy
+        run: npx vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

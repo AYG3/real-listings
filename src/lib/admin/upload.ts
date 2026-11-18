@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/guards";
 import prisma from "../prisma";
-import { toast } from "sonner";
 
 const listingStatuses = [
   "DRAFT",
@@ -27,7 +27,10 @@ function getString(formData: FormData, key: string, fallback = "") {
 }
 
 function getNumber(formData: FormData, key: string) {
-  const value = Number(getString(formData, key));
+  const raw = getString(formData, key);
+  if (!raw) return undefined;
+
+  const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;
 }
 
@@ -54,97 +57,80 @@ function createSlug(title: string) {
 export async function createListing(
   prevState: CreateListingState,
   formData: FormData
-  ): Promise<CreateListingState> {
-  
-    try {
+): Promise<CreateListingState> {
+  const session = await requireAdmin();
+
+  try {
     const title = getString(formData, "title", "Untitled property");
-  const attributes: Record<string, string | number | boolean> = {
-    negotiable: formData.get("negotiable") === "on",
 
+    const attributes: Record<string, string | number | boolean> = {
+      negotiable: formData.get("negotiable") === "on",
+    };
 
-  };
-
-  for (const key of ["bedrooms", "bathrooms", "toilets", "parking"]) {
-    const value = getNumber(formData, key);
-    if (value !== undefined) {
-      attributes[key] = value;
-    }
-  }
-
-  for (const key of [
-    "area",
-    "landmark",
-    "size",
-    "sizeUnit",
-    "yearBuilt",
-    "transactionType",
-  ]) {
-    const value = getString(formData, key);
-    if (value) {
-      attributes[key] = value;
-    }
-  }
-
-  const imageUrls = formData.getAll("imageUrls") as string[];
-  const imagePublicIds = formData.getAll("imagePublicIds") as string[];
-
-console.log("DEBUG imageUrls:", imageUrls);
-console.log("DEBUG imagePublicIds:", imagePublicIds);
-console.log("DEBUG all form keys:", [...formData.keys()]);
-
-  //TEMP TESTING
-  const agent: any = await prisma.user.findFirst();           // ← ADD
-  
-
-  const listing = await prisma.listing.create({
-    data: {
-      title,
-      description: getString(formData, "description", `${title} description`),
-      type: getListingType(formData),
-      status: getListingStatus(formData),
-      price: getNumber(formData, "price") ?? 0,
-      currency: "NGN",
-      address: getString(formData, "address", "Address unavailable"),
-      city: getString(formData, "city", "City unavailable"),
-      state: getString(formData, "state", "State unavailable"),
-      country: "Nigeria",
-      slug: createSlug(title),
-      // agentId: getString(formData, "agentId", "checkers"),
-      agentId: agent.id ?? "",
-      attributes,
-    },
-  });
-
-  // NEW: create image records
-  if (imageUrls.length > 0) {
-    try{
-      await prisma.listingImage.createMany({
-      data: imageUrls.map((url, i) => ({
-        listingId: listing.id,
-        url,
-        publicId: imagePublicIds[i] ?? "",
-        order: i,
-        isCover: i === 0,
-      })),
-    });
-    } catch (error) {
-      console.log("Error uploading/creating listing image", error)
-    }
-    
-  }
-
-  
-
-  revalidatePath("/admin/listings");
-  toast.success("Listing submitted successfully")
-  
-  return {
-    success: "Successfully uploaded listing"
-  }    
-    } catch (error) {
-      return {
-        error: "Failed to upload listing"
+    for (const key of ["bedrooms", "bathrooms", "toilets", "parking"]) {
+      const value = getNumber(formData, key);
+      if (value !== undefined) {
+        attributes[key] = value;
       }
     }
-  
+
+    for (const key of [
+      "area",
+      "landmark",
+      "size",
+      "sizeUnit",
+      "yearBuilt",
+      "transactionType",
+    ]) {
+      const value = getString(formData, key);
+      if (value) {
+        attributes[key] = value;
+      }
+    }
+
+    const imageUrls = formData.getAll("imageUrls") as string[];
+    const imagePublicIds = formData.getAll("imagePublicIds") as string[];
+
+    const listing = await prisma.listing.create({
+      data: {
+        title,
+        description: getString(formData, "description", `${title} description`),
+        type: getListingType(formData),
+        status: getListingStatus(formData),
+        price: getNumber(formData, "price") ?? 0,
+        currency: "NGN",
+        address: getString(formData, "address", "Address unavailable"),
+        city: getString(formData, "city", "City unavailable"),
+        state: getString(formData, "state", "State unavailable"),
+        country: "Nigeria",
+        slug: createSlug(title),
+        agentId: session.user.id,
+        attributes,
+      },
+    });
+
+    if (imageUrls.length > 0) {
+      try {
+        await prisma.listingImage.createMany({
+          data: imageUrls.map((url, index) => ({
+            listingId: listing.id,
+            url,
+            publicId: imagePublicIds[index] ?? "",
+            order: index,
+            isCover: index === 0,
+          })),
+        });
+      } catch (error) {
+        console.error("Failed to create listing images", error);
+      }
+    }
+
+    revalidatePath("/admin/listings");
+    revalidatePath("/");
+
+    return { success: "Listing uploaded successfully" };
+  } catch (error) {
+    console.error("Failed to create listing", error);
+    return { error: "Failed to upload listing. Please try again." };
+  }
 }

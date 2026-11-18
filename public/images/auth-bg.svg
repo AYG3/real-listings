@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" preserveAspectRatio="xMidYMid slice" role="presentation">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b2b22" />
+      <stop offset="55%" stop-color="#114b3d" />
+      <stop offset="100%" stop-color="#061a14" />
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d3329" />
+      <stop offset="100%" stop-color="#071f19" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c8a24a" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#c8a24a" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="windows" width="26" height="34" patternUnits="userSpaceOnUse">
+      <rect width="12" height="16" x="4" y="6" fill="#c8a24a" opacity="0.14" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#sky)" />
+  <circle cx="1230" cy="230" r="430" fill="url(#glow)" />
+
+  <g fill="url(#tower)">
+    <rect x="120" y="560" width="210" height="640" rx="10" />
+    <rect x="360" y="410" width="170" height="790" rx="10" />
+    <rect x="560" y="640" width="150" height="560" rx="10" />
+    <rect x="740" y="300" width="230" height="900" rx="12" />
+    <rect x="1000" y="520" width="180" height="680" rx="10" />
+    <rect x="1210" y="660" width="150" height="540" rx="10" />
+    <rect x="1390" y="470" width="190" height="730" rx="10" />
+  </g>
+
+  <g>
+    <rect x="130" y="575" width="190" height="620" fill="url(#windows)" />
+    <rect x="370" y="425" width="150" height="770" fill="url(#windows)" />
+    <rect x="570" y="655" width="130" height="540" fill="url(#windows)" />
+    <rect x="750" y="315" width="210" height="880" fill="url(#windows)" />
+    <rect x="1010" y="535" width="160" height="660" fill="url(#windows)" />
+    <rect x="1220" y="675" width="130" height="520" fill="url(#windows)" />
+    <rect x="1400" y="485" width="170" height="710" fill="url(#windows)" />
+  </g>
+
+  <rect x="0" y="1130" width="1600" height="70" fill="#04120e" opacity="0.85" />
+  <g stroke="#c8a24a" stroke-opacity="0.18" stroke-width="1">
+    <line x1="0" y1="980" x2="1600" y2="980" />
+    <line x1="0" y1="1030" x2="1600" y2="1030" />
+    <line x1="0" y1="1080" x2="1600" y2="1080" />
+  </g>
+</svg>

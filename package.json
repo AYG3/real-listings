@@ -1,13 +1,20 @@
 {
-  "name": "real-listings",
+  "name": "alara-estate",
   "version": "0.1.0",
   "private": true,
+  "description": "A three-sided property marketplace for Nigeria: verified agents, moderated listings, and a buyer enquiry pipeline.",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate || echo '> prisma generate skipped — run npm run db:generate'",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

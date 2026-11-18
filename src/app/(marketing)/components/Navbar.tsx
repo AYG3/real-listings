@@ -1,38 +1,57 @@
+import Link from "next/link";
+import { Heart, Search } from "lucide-react";
+import { brand } from "@/lib/brand";
+import { buttonStyles } from "@/components/ui/button";
 
-import Link from 'next/link'
-import { Search, Heart } from 'lucide-react'
+const links = [
+  { label: "Buy", href: "/buy" },
+  { label: "Rent", href: "/rent" },
+  { label: "Land", href: "/land" },
+  { label: "Agents", href: "/agents" },
+  { label: "All properties", href: "/properties" },
+];
 
 export default function Navbar() {
   return (
-    <div className="w-full font-sans">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100">
-        <div className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight uppercase">
-          ALARA ESTATE
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-500">
-          <Link href="/" className="text-gray-900 border-b-2 border-gray-900 pb-1 -mb-1">Home</Link>
-          <Link href="/buy" className="hover:text-gray-900 transition-colors">Buy</Link>
-          <Link href="#" className="hover:text-gray-900 transition-colors">Rent</Link>
-          <Link href="#" className="hover:text-gray-900 transition-colors">Land</Link>
-          <Link href="#" className="hover:text-gray-900 transition-colors">Agents</Link>
-        </div>
-        <div className="flex items-center gap-6">
-          <Search className="w-5 h-5 text-gray-700 cursor-pointer hover:text-gray-900 transition-colors hidden sm:block" />
-          <Heart className="w-5 h-5 text-gray-700 cursor-pointer hover:text-gray-900 transition-colors hidden sm:block" />
-          <div className="flex items-center gap-3">
-            <Link className="px-5 py-2 text-sm font-semibold border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"
-            href='/signup'
+    <nav className="sticky top-0 z-30 w-full border-b border-ink-900/10 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          className="text-lg font-extrabold uppercase tracking-[0.12em] text-forest-900 md:text-xl"
+        >
+          {brand.name}
+        </Link>
+
+        <div className="hidden items-center gap-6 text-sm font-semibold text-muted-500 lg:flex">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="transition-colors hover:text-forest-700"
             >
-              Sign In
+              {link.label}
             </Link>
-            <button className="px-5 py-2 text-sm font-semibold bg-[#114b3d] text-white rounded-md hover:bg-[#0d3b2f] transition-colors">
-              List Property
-            </button>
-          </div>
+          ))}
         </div>
-      </nav>
-    </div>
+
+        <div className="flex items-center gap-3">
+          <Search className="hidden h-5 w-5 text-muted-500 sm:block" aria-hidden />
+          <Heart className="hidden h-5 w-5 text-muted-500 sm:block" aria-hidden />
+          <Link
+            href="/login"
+            className={buttonStyles({ variant: "secondary", size: "sm" })}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/agent/auth/register"
+            className={buttonStyles({ size: "sm" })}
+          >
+            List property
+          </Link>
+        </div>
+      </div>
+    </nav>
   );
 }
 
