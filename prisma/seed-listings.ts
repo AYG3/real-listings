@@ -10,6 +10,8 @@ export type ShowcaseAgent = {
   name: string;
   email: string;
   phone: string;
+  agencyName: string;
+  bio: string;
 };
 
 /** Owns the seeded listings alongside the primary `agent@alara.ng` account. */
@@ -18,16 +20,22 @@ export const showcaseAgents: ShowcaseAgent[] = [
     name: "Chidi Okafor",
     email: "chidi@alara.ng",
     phone: "+234 803 555 0111",
+    agencyName: "Okafor & Co. Property",
+    bio: "Ten years letting and selling homes across Abuja and Port Harcourt, with a focus on serviced apartments and family duplexes.",
   },
   {
     name: "Grace Adebayo",
     email: "grace@alara.ng",
     phone: "+234 805 555 0122",
+    agencyName: "Adebayo Residential",
+    bio: "Handles prime residential sales in Lagos, Ibadan and Kano. Every instruction is verified before it is listed.",
   },
   {
     name: "Musa Bello",
     email: "musa@alara.ng",
     phone: "+234 807 555 0133",
+    agencyName: "Bello Homes",
+    bio: "Rental specialist covering Ajah, Wuse and Port Harcourt. Works mostly with families relocating for work.",
   },
 ];
 

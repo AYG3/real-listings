@@ -1,34 +1,59 @@
+import { cache } from "react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { after } from "next/server";
 import {
   ArrowLeft,
   Bath,
   BedDouble,
   Check,
-  Mail,
   MapPin,
   Phone,
   Ruler,
+  ShieldCheck,
   Square,
 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Price } from "@/components/ui/price";
-import { formatArea, formatDate, initials } from "@/lib/format";
+import { ListingCard } from "@/components/listing/listing-card";
+import { getSession } from "@/lib/auth/guards";
+import { brand } from "@/lib/brand";
+import {
+  formatArea,
+  formatDate,
+  formatPrice,
+  initials,
+  toNumber,
+} from "@/lib/format";
+import { getSimilarListings } from "@/lib/listing/queries";
+import { EnquiryForm } from "./_components/enquiry-form";
+import { ListingGallery } from "./_components/listing-gallery";
+import { SaveButton } from "./_components/save-button";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-async function getListing(slug: string) {
-  return prisma.listing.findFirst({
+const getListing = cache(async (slug: string) =>
+  prisma.listing.findFirst({
     where: { slug, status: "PUBLISHED" },
     include: {
       images: { orderBy: { order: "asc" } },
-      agent: { select: { id: true, name: true, email: true, phone: true, image: true } },
+      agent: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          image: true,
+          agencyName: true,
+          bio: true,
+          agentStatus: true,
+        },
+      },
     },
-  });
-}
+  }),
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -36,14 +61,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!listing) return { title: "Property not found" };
 
+  const price = formatPrice(listing.price, listing.currency);
+  const description = `${price} · ${listing.city}, ${listing.state}. ${listing.description.slice(0, 120)}`;
+
   return {
     title: listing.title,
-    description: listing.description.slice(0, 155),
+    description,
     openGraph: {
-      title: listing.title,
-      description: listing.description.slice(0, 155),
-      images: listing.images[0] ? [{ url: listing.images[0].url }] : undefined,
+      title: `${listing.title} — ${price}`,
+      description,
+      images: listing.images[0]
+        ? [{ url: listing.images[0].url, alt: listing.title }]
+        : undefined,
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${listing.title} — ${price}`,
+      description,
+      images: listing.images[0] ? [listing.images[0].url] : undefined,
     },
   };
 }
@@ -60,14 +96,61 @@ export default async function ListingPage({ params }: PageProps) {
 
   if (!listing) notFound();
 
+  const session = await getSession();
+
+  const [savedByViewer, similarListings] = await Promise.all([
+    session?.user
+      ? prisma.savedListing
+          .findUnique({
+            where: {
+              userId_listingId: {
+                userId: session.user.id,
+                listingId: listing.id,
+              },
+            },
+            select: { id: true },
+          })
+          .then(Boolean)
+      : Promise.resolve(false),
+    getSimilarListings({
+      id: listing.id,
+      city: listing.city,
+      state: listing.state,
+      type: listing.type,
+    }),
+  ]);
+
+  const referrer = (await headers()).get("referer");
+
+  // Analytics must never delay or break the page.
+  after(async () => {
+    try {
+      await prisma.listing.update({
+        where: { id: listing.id },
+        data: { viewCount: { increment: 1 } },
+      });
+      await prisma.listingView.create({
+        data: { listingId: listing.id, referrer },
+      });
+    } catch {
+      // Ignored on purpose.
+    }
+  });
+
   const attributes =
     listing.attributes && typeof listing.attributes === "object"
       ? (listing.attributes as Record<string, unknown>)
       : {};
-  const cover = listing.images[0];
   const isLand = listing.type === "LAND";
-  const intent = asText(attributes.transactionType);
+  const intent = listing.intent === "RENT" ? "rent" : "sale";
   const negotiable = attributes.negotiable === true;
+  const amenities = Array.isArray(attributes.amenities)
+    ? attributes.amenities.filter(
+        (item): item is string => typeof item === "string" && !!item,
+      )
+    : [];
+  const listedAt = listing.publishedAt ?? listing.createdAt;
+  const agentVerified = listing.agent.agentStatus === "VERIFIED";
 
   const facts = isLand
     ? [
@@ -97,11 +180,59 @@ export default async function ListingPage({ params }: PageProps) {
         { label: "Year built", value: asText(attributes.yearBuilt) ?? "—" },
       ];
 
+  const listingUrl = `${brand.url.replace(/\/$/, "")}/properties/${listing.slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: listing.title,
+    description: listing.description.slice(0, 300),
+    url: listingUrl,
+    image: listing.images.map((image) => image.url),
+    datePosted: listedAt.toISOString(),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: listing.address,
+      addressLocality: listing.city,
+      addressRegion: listing.state,
+      addressCountry: "NG",
+    },
+    offers: {
+      "@type": "Offer",
+      price: toNumber(listing.price),
+      priceCurrency: listing.currency,
+      availability: "https://schema.org/InStock",
+      url: listingUrl,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <nav aria-label="Breadcrumb" className="text-sm">
+        <ol className="flex flex-wrap items-center gap-2 text-muted-500">
+          <li>
+            <Link href="/" className="hover:text-forest-700">
+              Home
+            </Link>
+          </li>
+          <li aria-hidden>/</li>
+          <li>
+            <Link href="/properties" className="hover:text-forest-700">
+              Properties
+            </Link>
+          </li>
+          <li aria-hidden>/</li>
+          <li className="truncate font-semibold text-ink-900">{listing.title}</li>
+        </ol>
+      </nav>
+
       <Link
         href="/properties"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-forest-700 hover:text-forest-800"
+        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-forest-700 hover:text-forest-800"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
         Back to results
@@ -109,44 +240,13 @@ export default async function ListingPage({ params }: PageProps) {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div>
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-card bg-ivory-100">
-            {cover ? (
-              <Image
-                src={cover.url}
-                alt={listing.title}
-                fill
-                priority
-                sizes="(min-width: 1024px) 60vw, 100vw"
-                className="object-cover"
-              />
-            ) : (
-              <div
-                aria-hidden
-                className="flex h-full items-center justify-center bg-gradient-to-br from-forest-700/10 to-gold-500/10 text-sm font-semibold text-muted-500"
-              >
-                No photo yet
-              </div>
-            )}
-          </div>
-
-          {listing.images.length > 1 ? (
-            <ul className="mt-2 grid grid-cols-4 gap-2" aria-label="More photos">
-              {listing.images.slice(1, 5).map((image) => (
-                <li
-                  key={image.id}
-                  className="relative aspect-square overflow-hidden rounded-control bg-ivory-100"
-                >
-                  <Image
-                    src={image.url}
-                    alt=""
-                    fill
-                    sizes="15vw"
-                    className="object-cover"
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <ListingGallery
+            photos={listing.images.map((image) => ({
+              id: image.id,
+              url: image.url,
+            }))}
+            title={listing.title}
+          />
 
           <section className="mt-8">
             <h2 className="text-h3 font-bold text-ink-900">About this property</h2>
@@ -176,6 +276,23 @@ export default async function ListingPage({ params }: PageProps) {
             </dl>
           </section>
 
+          {amenities.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-h3 font-bold text-ink-900">Amenities</h2>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {amenities.map((amenity) => (
+                  <li
+                    key={amenity}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-sm text-ink-700"
+                  >
+                    <Check className="h-3.5 w-3.5 text-success" aria-hidden />
+                    {amenity}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <section className="mt-8">
             <h2 className="text-h3 font-bold text-ink-900">Location</h2>
             <p className="mt-2 flex items-center gap-2 text-sm text-ink-700">
@@ -193,9 +310,24 @@ export default async function ListingPage({ params }: PageProps) {
               Open in Google Maps
             </a>
           </section>
+
+          {similarListings.length > 0 ? (
+            <section className="mt-10 border-t border-ink-900/10 pt-8">
+              <h2 className="text-h3 font-bold text-ink-900">
+                Similar properties in {listing.city}
+              </h2>
+              <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+                {similarListings.map((similar) => (
+                  <li key={similar.id}>
+                    <ListingCard listing={similar} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-card border border-ink-900/10 bg-white p-6 shadow-card">
             <p className="text-2xl font-bold text-forest-700">
               <Price value={listing.price} currency={listing.currency} />
@@ -206,11 +338,9 @@ export default async function ListingPage({ params }: PageProps) {
 
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge tone="info">{isLand ? "Land" : "House"}</Badge>
-              {intent ? (
-                <Badge tone="neutral">
-                  {intent === "rent" ? "For rent" : "For sale"}
-                </Badge>
-              ) : null}
+              <Badge tone="neutral">
+                {intent === "rent" ? "For rent" : "For sale"}
+              </Badge>
               {negotiable ? <Badge tone="success">Negotiable</Badge> : null}
             </div>
 
@@ -243,10 +373,19 @@ export default async function ListingPage({ params }: PageProps) {
               )}
             </ul>
 
+            <div className="mt-6">
+              <SaveButton
+                listingId={listing.id}
+                initialSaved={savedByViewer}
+                isAuthenticated={Boolean(session?.user)}
+              />
+            </div>
+
             <div className="mt-6 rounded-card border border-ink-900/10 bg-surface p-4">
               <div className="flex items-center gap-3">
                 {listing.agent.image ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar hosts are not guaranteed in remotePatterns
+                  <img
                     src={listing.agent.image}
                     alt=""
                     width={44}
@@ -265,9 +404,22 @@ export default async function ListingPage({ params }: PageProps) {
                   <p className="truncate text-sm font-semibold text-ink-900">
                     {listing.agent.name}
                   </p>
-                  <p className="text-xs text-muted-500">Listing agent</p>
+                  <p className="text-xs text-muted-500">
+                    {listing.agent.agencyName ?? "Listing agent"}
+                  </p>
                 </div>
               </div>
+
+              {agentVerified ? (
+                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-forest-800">
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                  Verified agent
+                </p>
+              ) : null}
+
+              {listing.agent.bio ? (
+                <p className="mt-3 text-sm text-ink-700">{listing.agent.bio}</p>
+              ) : null}
 
               <dl className="mt-4 space-y-2 text-sm text-ink-700">
                 {listing.agent.phone ? (
@@ -276,7 +428,7 @@ export default async function ListingPage({ params }: PageProps) {
                     <dt className="sr-only">Phone</dt>
                     <dd>
                       <a
-                        href={`tel:${listing.agent.phone}`}
+                        href={`tel:${listing.agent.phone.replace(/[^+\d]/g, "")}`}
                         className="hover:underline"
                       >
                         {listing.agent.phone}
@@ -284,31 +436,30 @@ export default async function ListingPage({ params }: PageProps) {
                     </dd>
                   </div>
                 ) : null}
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-500" aria-hidden />
-                  <dt className="sr-only">Email</dt>
-                  <dd>
-                    <a
-                      href={`mailto:${listing.agent.email}?subject=${encodeURIComponent(
-                        `Enquiry about ${listing.title}`,
-                      )}`}
-                      className="hover:underline"
-                    >
-                      Email the agent
-                    </a>
-                  </dd>
-                </div>
               </dl>
 
-              <p className="mt-4 flex items-start gap-2 rounded-control bg-white px-3 py-2 text-xs text-muted-500">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" aria-hidden />
-                In-app enquiries arrive in Phase 3; for now this listing is
-                contactable by phone or email.
+              <p className="mt-4 text-xs text-muted-500">
+                Enquiries come through the form below — email addresses are
+                never published on this page.
               </p>
             </div>
 
+            <div className="mt-5 rounded-card border border-ink-900/10 bg-white p-4">
+              <h2 className="text-base font-bold text-ink-900">
+                Enquire about this property
+              </h2>
+              <p className="mb-4 mt-1 text-xs text-muted-500">
+                Send {listing.agent.name} a message. You do not need an account.
+              </p>
+              <EnquiryForm
+                listingId={listing.id}
+                agentName={listing.agent.name}
+                title={listing.title}
+              />
+            </div>
+
             <p className="mt-4 text-xs text-muted-500">
-              Listed {formatDate(listing.createdAt)}
+              Listed {formatDate(listedAt)}
             </p>
           </div>
         </aside>

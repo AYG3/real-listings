@@ -26,7 +26,7 @@
 | **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding) — [details](#phase-1--implementation-progress) |
 | **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
-| 3 — Listing detail + enquiry loop | ⬜ Not started (detail page shipped early in Phase 2) |
+| **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP unmeasured) — [details](#phase-3--implementation-progress) |
 | 4 — Real agent workspace | ⬜ Not started |
 | 5 — Real admin control tower | ⬜ Not started |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
@@ -72,25 +72,25 @@ Rated 1–5, where 3 = "works for the happy path, fragile", 5 = "production-grad
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Data model | **4 / 5** | Sensible enums, `attributes Json`, `ListingImage.order/isCover`, `SavedListing` uniqueness, Better Auth tables. Missing agent-verification fields, `publishedAt`, listing intent (sale vs rent), and guest inquiries. |
+| Data model | **4.5 / 5** | *(+Phase 3)* `ListingIntent` and `publishedAt` are real columns, guest inquiries (`buyerId` nullable + contact fields), `ListingView`, `viewCount`, agent verification/agency fields. Missing: `AuditLog`, demo flags, PostGIS geometry. |
 | Authentication | **3.5 / 5** | *(Post-Phase 1)* One `AuthShell` + one `CredentialsForm` + one `/login` with a server-verified role gate; portal deep links redirect into it and the duplicated actions/layouts are gone. Still no password reset or email verification. |
 | Public discovery | **4 / 5** | *(Post-Phase 2)* URL-driven search with `q`, intent, type, state, city, price band, beds, sort and pagination; filter chips; real listing detail pages with gallery, facts, agent card and map link; `/rent`, `/land`, `/buy` aliases; `/agents` + `/agents/[id]`; 18 seeded listings across six states. Missing: similar listings, ISR, saved-listing button. |
-| Buyer journey | **0.5 / 5** | No saved-listings UI, no inquiry UI, no buyer dashboard. `SavedListing` and `Inquiry` models exist but are never written by the app. |
+| Buyer journey | **3.5 / 5** | *(Post-Phase 3)* A guest can enquire from any listing and the enquiry is stored with `buyerId = null`; save/unsave persists for guests and merges on login; similar listings keep the browse loop going. Missing: a buyer `/account` area (saved + enquiries) and agent-side handling of those enquiries (Phase 4). |
 | Agent portal | **2.5 / 5** | Listing list is real and scoped to the session user; create persists images and always enters moderation as `DRAFT`. Dashboard KPIs are still fabricated, edit/delete are not implemented, no inquiry inbox, profile form is read-only. |
 | Admin portal | **2 / 5** | Listings list reads the real DB and looks excellent. Agents, pending queues, and overview are hardcoded fixtures; Publish/Flag/Archive buttons have no handlers. |
 | Engineering hygiene | **3.5 / 5** | *(Post-Phase 2)* Build, typecheck and lint pass; CI runs lint/typecheck/build on every push and PR; `.env.example`, real README, error/loading/404 boundaries, one formatter source. Still zero automated tests. |
 | Design & brand | **3.5 / 5** | *(Post-Phase 2)* One brand name, one token palette, zero raw hex, one component vocabulary, real testimonial copy, no dead `href="#"`. Portal screens (agent dashboard, admin fixtures) still lean on default Tailwind palette classes; demo photography is stock. |
-| Security | **3.5 / 5** | *(Post-Phase 0)* Every listing mutation re-checks the role, page-level guards added, security headers applied, debug logging removed. Still no validation library and no rate limiting. |
-| Accessibility & performance | **3 / 5** | *(Post-Phase 1)* Labelled inputs, `role="alert"` errors, `aria-busy` submits, visible `:focus-visible` ring, reduced-motion skeletons, loading/error boundaries. Still 8 raw `<img>` elements and no focus trap in modals. |
+| Security | **4 / 5** | *(Post-Phase 3)* Every listing mutation re-checks the role; page-level guards; security headers; zod validation and a 5/hour rate limit on the only public write path; guest enquiries never trust client identity; raw agent emails are no longer published. Still: rate limit is per-process, no CSRF beyond Next's built-in origin check, no audit log (Phase 5). |
+| Accessibility & performance | **3.5 / 5** | *(Post-Phase 3)* Labelled fields with `aria-invalid`/`aria-describedby`, `role="alert"` errors, `role="status"` success, `aria-pressed` save toggle, keyboard-operable lightbox with focus return, `aria-busy` submits, focus-visible ring, reduced-motion skeletons. Still one deliberate raw `<img>` for OAuth avatars and no full focus trap in the lightbox. |
 
-**Overall: Stage 3 of 6 on the maturity ladder** — *"authenticated prototype with real read paths"*.
+**Overall: Stage 4 of 6 on the maturity ladder** — *"core transaction loop complete"*.
 
-> Phases 0–2 and the Step 1 repair make the **discovery** half of the product genuinely walkable: a stranger can search, filter, open a listing and reach an agent. The ladder does not move to stage 4 (*core transaction loop complete*) until Phase 3 lands the enquiry/save loop, because browsing without a way to contact anyone is still a read-only experience.
+> Phases 0–3 plus the Step 1 repair close the loop a reviewer actually walks: search → inspect → enquire (no account) → save → the agent receives a stored lead. Stage 5 (*production-hardened*) needs the real agent/admin workspaces and the demo-mode guardrails.
 
 ```
-1 Scaffold ── 2 Static marketing mock ── 3 ▶ Auth + discovery (you are here)
-                                                   │
-     6 Portfolio showcase ◀── 5 Production-hardened ◀── 4 Core transaction loop complete
+1 Scaffold ── 2 Static marketing mock ── 3 Auth + discovery ── 4 ▶ Core transaction loop (you are here)
+                                                                     │
+                    6 Portfolio showcase ◀── 5 Production-hardened ◀──┘
 ```
 
 ### 2.2 What genuinely works (protect this)
@@ -123,7 +123,7 @@ Rated 1–5, where 3 = "works for the happy path, fragile", 5 = "production-grad
 | ~~Missing `/images/auth-bg.jpg`~~ | Fixed in Phase 0 — `public/images/auth-bg.svg` + `logo-mark.svg` |
 | ~~No loading / error / 404 boundaries or OG image~~ | Fixed in Phase 0 |
 
-**Still open on the public site:** similar listings, a save/unsave control, the `/demo` CTA, and real photography instead of stock images.
+**Still open on the public site:** the `/demo` CTA, real photography instead of stock images, and a buyer `/account` area for saved listings and enquiries.
 
 #### Auth & roles
 
@@ -806,13 +806,55 @@ Create now redirects to `/agent/listings?created=1` with a "submitted for review
 
 **Acceptance criteria**
 
-- [ ] Every property card leads to a complete, populated detail page (no blank screens, no console logs).
-- [ ] A guest can submit an enquiry and see it in `Inquiry` with `buyerId = null`.
-- [ ] Enquiry form rejects invalid email/phone and duplicate rapid submissions.
-- [ ] Saving while logged out persists locally and merges after login; saving while logged in writes `SavedListing`.
-- [ ] Gallery is fully keyboard operable; Escape closes the lightbox; focus returns to the trigger.
-- [ ] OG preview renders the cover image and correct price when the URL is pasted into LinkedIn/X.
-- [ ] LCP on a detail page < 2.5 s on mobile.
+- [x] Every property card leads to a complete, populated detail page (no blank screens, no console logs).
+- [x] A guest can submit an enquiry and see it in `Inquiry` with `buyerId = null`.
+- [x] Enquiry form rejects invalid email/phone and duplicate rapid submissions.
+- [x] Saving while logged out persists locally and merges after login; saving while logged in writes `SavedListing`.
+- [x] Gallery is fully keyboard operable; Escape closes the lightbox; focus returns to the trigger.
+- [x] OG preview renders the cover image and correct price when the URL is pasted into LinkedIn/X. *(Metadata verified in the rendered HTML; external preview unrendered here.)*
+- [ ] LCP on a detail page < 2.5 s on mobile. **Unmeasured** — no Lighthouse/WebPageTest run available.
+
+#### Phase 3 — Implementation progress
+
+**Status: complete** (LCP excepted). Verified 18 November 2026.
+
+| # | Scope item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | Detail page + JSON-LD | ✅ | [`properties/[slug]/page.tsx`](<../src/app/(marketing)/properties/[slug]/page.tsx>) is server-rendered with breadcrumb, `RealEstateListing` JSON-LD (name, image[], address, offers/price), and per-listing metadata including the formatted price. |
+| 2 | Detail layout | ✅ | [`ListingGallery`](<../src/app/(marketing)/properties/[slug]/_components/listing-gallery.tsx>) (main + thumbnails + lightbox), type-specific facts, amenities-if-present, description, map link, sticky aside with price/status/facts/save/agent/enquiry. |
+| 3 | Guest enquiry | ✅ | Server action [`submitEnquiry`](<../src/app/(marketing)/properties/[slug]/actions.ts>) validates with zod ([inquiry.ts](../src/lib/listing/inquiry.ts)), enforces a 5/hour per-IP window, silently absorbs honeypot hits, and writes `Inquiry` with `buyerId = null` for guests. Inline success panel, never a toast. |
+| 4 | Save / unsave | ✅ | [`SaveButton`](<../src/app/(marketing)/properties/[slug]/_components/save-button.tsx>) is optimistic; guests write `localStorage`, signed-in users write `SavedListing`, and the first authenticated view merges guest saves via `mergeGuestSaves`. |
+| 5 | Similar listings | ✅ | `getSimilarListings` returns up to 3: same city first, then same state + type, excluding the current listing. |
+| 6 | Agent contact hygiene | ✅ | Agency name, bio and verified badge shown; phone rendered as a sanitised `tel:` link; the raw email address is no longer published. |
+| 7 | View tracking | ✅ | `after()` increments `viewCount` and inserts a `ListingView` row post-response; failures are swallowed so analytics can never break the page. |
+| — | Schema migration | ✅ | `20261118221000_marketplace_completion`: `ListingIntent`/`AgentStatus`, agent profile fields, `intent`/`publishedAt`/`viewCount`/`rejectionReason`, nullable inquiry buyer + guest columns, `listing_views`, three listing indexes. Includes backfills for `intent` and `publishedAt`. |
+| — | Seed | ✅ | All four agents verified with agencies/bios; listings carry `intent`, `publishedAt` and deterministic view counts. |
+
+**Verification evidence**
+
+| Check | Result |
+| --- | --- |
+| `npx tsc --noEmit` / `npx eslint` / `next build --webpack` | ✅ clean |
+| Guest enquiry (anonymous session) | ✅ success panel; `Inquiry.buyerId = null` |
+| Signed-in enquiry | ✅ `buyerId` set to the session user |
+| Invalid email | ✅ `aria-invalid="true"`, error text "Enter a valid email address." wired via `aria-describedby`; **no row written** |
+| Rate limit | ✅ 6th submission in the window rejected: "Too many enquiries from this connection. Try again in about 58 minutes." |
+| Guest save → sign in | ✅ `localStorage` key written, cleared after login, `SavedListing` row created for the buyer |
+| Gallery keyboard | ✅ opens on Photo 1 with focus on Close; `ArrowRight` → Photo 2; `Escape` closes, focus returns to the trigger, body scroll restored |
+| OG/Twitter metadata | ✅ `og:title` = "4-bedroom duplex with a private garden — ₦185,000,000" |
+
+**Deviations**
+
+| Planned | Delivered | Reason |
+| --- | --- | --- |
+| Zod + honeypot + rate limit | ✅ all three | In-memory sliding window (per process); a multi-instance deploy needs Redis and this is documented in the module. |
+| Duplicate rapid submissions rejected | ✅ treated as success, no second row | Matches the idempotent UX: the second click does not error, it just does not duplicate. |
+| Buyer `/account/saved` page | ⬜ deferred to Phase 4 | Phase 3 acceptance only required persistence + merge; the list UI belongs with the buyer account work. |
+
+**Environment notes**
+
+- The Prisma CLI cannot connect through the Supabase pooler (needs `sslmode=require`, then the 15-session cap). The migration was generated by hand and applied through the app's `pg` adapter, with `_prisma_migrations` recorded so `migrate deploy` sees it applied. Use a direct/session connection for future migrations.
+- The long-running dev server needed a restart to pick up the regenerated Prisma client; verification ran against `next start` on a separate port.
 
 ---
 
@@ -1158,12 +1200,21 @@ Once the phases are done, the CV and interview story should be grounded in outco
 7. ~~Fix the proxy gating public `/agents` as a portal, and `next/image` rejecting query-string URLs.~~ ✅
 8. ~~Replace lorem-ipsum testimonials with real copy.~~ ✅
 
-### Next up (Phase 3 — listing detail and the enquiry loop)
+### Done in Phase 3 (listing detail and the enquiry loop)
 
-1. Migration for `intent`, `publishedAt`, guest inquiry fields (`buyerId` nullable, `name`/`email`/`phone`) and agent verification status. *(0.5 day)*
-2. Enquiry form on the listing page that works without login, with validation, honeypot and rate limiting. *(1.5 days)*
-3. Save/unsave with `SavedListing` (optimistic, `localStorage` for guests, merge on login). *(1 day)*
-4. Similar listings (same city + type), JSON-LD and the gallery lightbox. *(1 day)*
-5. Deploy to Vercel + Supabase so the loop can be walked by a stranger. ⏸️ **Blocked — needs account credentials.**
+1. ~~Migration for `intent`, `publishedAt`, guest inquiry fields and agent verification status.~~ ✅
+2. ~~Guest-capable enquiry form with zod validation, honeypot, duplicate guard and a 5/hour rate limit.~~ ✅
+3. ~~Save/unsave with `SavedListing`, optimistic UI, `localStorage` for guests and merge on login.~~ ✅
+4. ~~Similar listings, JSON-LD, keyboard gallery lightbox and `after()` view tracking.~~ ✅
+5. ~~Agency/verified-badge agent card; raw agent emails removed from the page.~~ ✅
 
-Deploying remains the highest-value outstanding item — it turns everything above into something a recruiter can actually open.
+### Next up (Phase 4 — real agent workspace)
+
+1. Dashboard from real data: listing counts by status, views from `ListingView`, enquiries this month, recent activity. *(1 day)*
+2. Listing row actions: edit, publish/unpublish, mark sold/under offer, archive — guarded server actions with zod and `revalidatePath`. *(2 days)*
+3. `/agent/listings/[id]/edit` sharing the create form, plus an image manager (reorder, set cover, delete). *(1.5 days)*
+4. `/agent/enquiries` inbox with status transitions (`NEW → CONTACTED → VIEWING_SCHEDULED → CLOSED`). *(1.5 days)*
+5. Profile persistence: agency, bio, phone, location, verification state. *(0.5 day)*
+6. Buyer `/account/saved` + `/account/enquiries` (deferred from Phase 3). *(1 day)*
+
+Deploying to Vercel + Supabase remains the highest-value outstanding item — it turns everything above into something a recruiter can actually open.

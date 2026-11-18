@@ -91,7 +91,7 @@ export default async function AgentProfilePage({ params }: PageProps) {
 
         {agent.phone ? (
           <Link
-            href={`tel:${agent.phone}`}
+            href={`tel:${agent.phone.replace(/[^+\d]/g, "")}`}
             className={buttonStyles({ variant: "secondary" })}
           >
             <Phone className="h-4 w-4" aria-hidden />

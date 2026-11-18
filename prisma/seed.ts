@@ -46,6 +46,23 @@ const showcaseAccounts: SeedAccount[] = showcaseAgents.map((agent) => ({
   phone: agent.phone,
 }));
 
+const agentProfiles: Record<
+  string,
+  { agencyName: string; bio: string; phone?: string }
+> = {
+  "agent@alara.ng": {
+    agencyName: "Alara Estates",
+    phone: "+234 802 555 0100",
+    bio: "Lagos-based agency listing houses and land across Lekki, Ikoyi and the mainland. Every property is inspected before it is published.",
+  },
+  ...Object.fromEntries(
+    showcaseAgents.map((agent) => [
+      agent.email,
+      { agencyName: agent.agencyName, bio: agent.bio, phone: agent.phone },
+    ]),
+  ),
+};
+
 async function main() {
   const { default: prisma } = await import("@/lib/prisma");
   const { auth } = await import("@/lib/auth/auth");
@@ -67,6 +84,8 @@ async function main() {
       });
     }
 
+    const profile = account.role === "AGENT" ? agentProfiles[account.email] : undefined;
+
     await prisma.user.update({
       where: { email: account.email },
       data: {
@@ -74,6 +93,15 @@ async function main() {
         role: account.role,
         emailVerified: true,
         ...(account.phone ? { phone: account.phone } : {}),
+        ...(profile
+          ? {
+              agentStatus: "VERIFIED" as const,
+              verifiedAt: new Date("2026-03-01T09:00:00.000Z"),
+              agencyName: profile.agencyName,
+              bio: profile.bio,
+              phone: profile.phone ?? account.phone,
+            }
+          : {}),
       },
     });
 
@@ -109,11 +137,18 @@ async function main() {
       continue;
     }
 
+    const createdAt = new Date(seedEpoch - index * 36 * 60 * 60 * 1000);
+    const transactionType = String(item.attributes.transactionType ?? "sale");
+
     const data = {
       title: item.title,
       description: item.description,
       type: item.type,
       status: item.status,
+      intent:
+        transactionType === "rent" || transactionType === "short-let"
+          ? ("RENT" as const)
+          : ("SALE" as const),
       price: item.price,
       currency: "NGN",
       address: item.address,
@@ -123,7 +158,9 @@ async function main() {
       attributes: item.attributes,
       agentId: agent.id,
       // Fixed timestamps keep ordering (and the seed) deterministic.
-      createdAt: new Date(seedEpoch - index * 36 * 60 * 60 * 1000),
+      createdAt,
+      publishedAt: item.status === "PUBLISHED" ? createdAt : null,
+      viewCount: item.status === "PUBLISHED" ? 12 + index * 7 : 0,
     };
 
     const listing = await prisma.listing.upsert({

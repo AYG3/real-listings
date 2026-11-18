@@ -4,7 +4,7 @@ A three-sided property marketplace for Nigeria: buyers discover verified houses 
 
 Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudinary.
 
-> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, and public discovery (Phases 0–2) are complete; the enquiry loop is next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
+> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery and the enquiry/save loop (Phases 0–3) are complete; the real agent and admin workspaces are next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
 
 ## Stack
 
@@ -17,11 +17,15 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 | Auth | Better Auth | Email/password + Google OAuth, sessions in Postgres, role-aware guards. |
 | Media | Cloudinary via `next-cloudinary` | Direct browser uploads; only the secure URL and public id reach the database. |
 | UI | Tailwind CSS v4, `lucide-react`, `sonner` | Fast, consistent, accessible primitives. |
+| Validation | `zod` | One schema per mutation; server actions reject malformed input before touching the database. |
 
 ## What works today
 
 - **Public discovery:** `/properties` with URL-synced filters (`q`, intent, type, state, city, price band, beds, sort), pagination and active-filter chips. Every combination is a shareable, reloadable URL that works without JavaScript.
-- **Listing detail pages** at `/properties/[slug]` with gallery, type-specific facts (beds/baths/sqm or plots/title/survey), description, agent card and a Google Maps link.
+- **Listing detail pages** at `/properties/[slug]` with keyboard-operable gallery, type-specific facts (beds/baths/sqm or plots/title/survey), description, similar listings, verified-agent card and JSON-LD.
+- **Guest enquiries:** anyone can message the agent without an account. Validated with zod, honeypot-protected, rate limited to 5/hour per IP, and stored in Postgres (`buyerId` is null for guests, set when signed in).
+- **Save properties:** optimistic save button; guests keep saves in `localStorage` and they merge into `SavedListing` on the next signed-in view.
+- **View tracking:** each detail render increments `viewCount` and records a `ListingView` after the response is sent.
 - **Agent directory** at `/agents` and per-agent profiles at `/agents/[id]`, both reading live data.
 - **Preset routes** `/buy`, `/rent`, `/land` that reuse the results page instead of duplicating queries.
 - **Real counts on the homepage** (`listing.count` + `groupBy`) and a hero search that actually navigates.
@@ -34,8 +38,9 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 
 ## In progress
 
-- Enquiry loop, saved listings and buyer account pages (Phase 3).
-- Real dashboards and moderation actions (Phases 4–5).
+- Real agent workspace: dashboards, listing actions, enquiry inbox (Phase 4).
+- Admin moderation from real data (Phase 5).
+- Buyer `/account` pages for saved listings and enquiries.
 - One-click, read-only demo mode for reviewers (Phase 6).
 - Automated tests (Phase 7); CI already runs lint, typecheck and build.
 

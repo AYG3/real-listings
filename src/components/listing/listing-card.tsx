@@ -29,7 +29,8 @@ export function ListingCard({
   const cover = listing.images[0];
   const isLand = listing.type === "LAND";
 
-  const intent = asText(attributes.transactionType);
+  const intent =
+    listing.intent === "RENT" ? "rent" : asText(attributes.transactionType);
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-card border border-ink-900/10 bg-white shadow-card transition-shadow hover:shadow-lift">

@@ -23,6 +23,18 @@ enum ListingType {
   LAND
 }
 
+enum ListingIntent {
+  SALE
+  RENT
+}
+
+enum AgentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
 enum ListingStatus {
   DRAFT
   PUBLISHED
@@ -57,6 +69,12 @@ model User {
   sessions Session[]
   accounts Account[]
 
+  // Agent verification and public profile
+  agentStatus AgentStatus? @default(PENDING)
+  agencyName  String?
+  bio         String?
+  verifiedAt  DateTime?
+
   @@map("users")
 }
 
@@ -68,9 +86,14 @@ model Listing {
 
   type   ListingType
   status ListingStatus @default(DRAFT)
+  intent ListingIntent @default(SALE)
 
   price    Decimal @db.Decimal(14, 2)
   currency String  @default("NGN")
+
+  publishedAt     DateTime?
+  viewCount       Int       @default(0)
+  rejectionReason String?
 
   // Location
   address   String
@@ -92,6 +115,7 @@ model Listing {
   images    ListingImage[]
   inquiries Inquiry[]
   savedBy   SavedListing[]
+  views     ListingView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,6 +123,9 @@ model Listing {
   @@index([type])
   @@index([status])
   @@index([city, state])
+  @@index([agentId])
+  @@index([status, intent, type])
+  @@index([createdAt])
   @@map("listings")
 }
 
@@ -122,8 +149,13 @@ model Inquiry {
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  buyerId String
-  buyer   User   @relation("BuyerInquiries", fields: [buyerId], references: [id])
+  // Guests can enquire without an account; signed-in buyers are linked.
+  buyerId String?
+  buyer   User?   @relation("BuyerInquiries", fields: [buyerId], references: [id])
+
+  name  String?
+  email String?
+  phone String?
 
   message String
   status  InquiryStatus @default(NEW)
@@ -134,6 +166,18 @@ model Inquiry {
   @@index([listingId])
   @@index([buyerId])
   @@map("inquiries")
+}
+
+model ListingView {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  referrer  String?
+  createdAt DateTime @default(now())
+
+  @@index([listingId, createdAt])
+  @@map("listing_views")
 }
 
 model SavedListing {

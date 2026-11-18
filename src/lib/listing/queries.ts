@@ -2,27 +2,12 @@ import prisma from "@/lib/prisma";
 import type { Prisma } from "@/prisma/generated/client";
 import { PAGE_SIZE, type SearchFilters } from "./filters";
 
-/**
- * Sale/rent is stored in `attributes.transactionType` (the upload form has
- * always collected it). Phase 3 promotes it to a real column; until then the
- * filter reads the JSON path so discovery works against existing rows.
- */
-const TRANSACTION_TYPE_BY_INTENT = {
-  SALE: "sale",
-  RENT: "rent",
-} as const;
-
 function buildWhere(filters: SearchFilters): Prisma.ListingWhereInput {
   const where: Prisma.ListingWhereInput = { status: "PUBLISHED" };
 
   if (filters.type) where.type = filters.type;
 
-  if (filters.intent) {
-    where.attributes = {
-      path: ["transactionType"],
-      equals: TRANSACTION_TYPE_BY_INTENT[filters.intent],
-    };
-  }
+  if (filters.intent) where.intent = filters.intent;
 
   if (filters.state) {
     where.state = { equals: filters.state, mode: "insensitive" };
@@ -194,6 +179,9 @@ export type AgentProfile = {
   name: string;
   image: string | null;
   phone: string | null;
+  agencyName: string | null;
+  bio: string | null;
+  verified: boolean;
   city: string | null;
   state: string | null;
   listings: ListingCardData[];
@@ -210,10 +198,13 @@ export async function getAgentProfile(
       name: true,
       image: true,
       phone: true,
+      agencyName: true,
+      bio: true,
+      agentStatus: true,
       listings: {
         where: { status: "PUBLISHED" },
         include: cardInclude,
-        orderBy: { createdAt: "desc" },
+        orderBy: { publishedAt: "desc" },
       },
     },
   });
@@ -227,8 +218,54 @@ export async function getAgentProfile(
     name: agent.name,
     image: agent.image,
     phone: agent.phone,
+    agencyName: agent.agencyName,
+    bio: agent.bio,
+    verified: agent.agentStatus === "VERIFIED",
     city: latest?.city ?? null,
     state: latest?.state ?? null,
     listings: agent.listings,
   };
+}
+
+
+/**
+ * Three listings near the current one: same city first, then same state and
+ * type, so the detail page never ends in a hard stop.
+ */
+export async function getSimilarListings(
+  listing: {
+    id: string;
+    city: string;
+    state: string;
+    type: "HOUSE" | "LAND";
+  },
+  limit = 3,
+): Promise<ListingCardData[]> {
+  const cityMatches = await prisma.listing.findMany({
+    where: {
+      status: "PUBLISHED",
+      id: { not: listing.id },
+      city: { equals: listing.city, mode: "insensitive" },
+    },
+    include: cardInclude,
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+  });
+
+  if (cityMatches.length >= limit) return cityMatches;
+
+  const seen = [listing.id, ...cityMatches.map((item) => item.id)];
+  const stateMatches = await prisma.listing.findMany({
+    where: {
+      status: "PUBLISHED",
+      id: { notIn: seen },
+      state: { equals: listing.state, mode: "insensitive" },
+      type: listing.type,
+    },
+    include: cardInclude,
+    orderBy: { publishedAt: "desc" },
+    take: limit - cityMatches.length,
+  });
+
+  return [...cityMatches, ...stateMatches];
 }
