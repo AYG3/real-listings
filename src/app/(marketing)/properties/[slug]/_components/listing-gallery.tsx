@@ -92,6 +92,7 @@ export function ListingGallery({
           preload
           loading="eager"
           fetchPriority="high"
+          quality={62}
           sizes="(min-width: 1024px) 60vw, 100vw"
           className="object-cover"
         />

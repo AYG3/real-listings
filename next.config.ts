@@ -5,6 +5,12 @@ const cloudinaryCloudName =
 
 const nextConfig: NextConfig = {
   images: {
+    // AVIF first: it is ~40% smaller than WebP at the same quality, which is
+    // the difference between a 134 KB and a ~70 KB hero on the detail page.
+    formats: ["image/avif", "image/webp"],
+    // Next 16 defaults `qualities` to [75] and silently coerces anything else,
+    // so the hero's 62 has to be declared here to take effect.
+    qualities: [62, 75],
     // Object form is required here: the URL form derives `search` from the URL,
     // which constrains src values to exactly no query string — and both
     // Cloudinary and Unsplash URLs carry query parameters.

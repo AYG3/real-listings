@@ -100,6 +100,7 @@ Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboa
 | `npm start` | Run the production build. |
 | `npm run lint` | ESLint (Next.js core-web-vitals + TypeScript rules). |
 | `npm run typecheck` | `tsc --noEmit`. |
+| `npm test` | Vitest unit tests (`src/**/*.test.ts`). |
 | `npm run db:migrate` | Create and apply a migration in development. |
 | `npm run db:seed` | Seed the ADMIN / AGENT / BUYER accounts (idempotent). |
 | `npm run db:studio` | Open Prisma Studio. |

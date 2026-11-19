@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { Suspense, cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -101,6 +101,62 @@ function asText(value: unknown): string | null {
   return null;
 }
 
+type SimilarListingSource = {
+  id: string;
+  city: string;
+  state: string;
+  type: "HOUSE" | "LAND";
+};
+
+async function SimilarListings({ listing }: { listing: SimilarListingSource }) {
+  const similarListings = await getSimilarListings(listing);
+
+  if (similarListings.length === 0) return null;
+
+  return (
+    <section className="mt-10 border-t border-ink-900/10 pt-8">
+      <h2 className="text-h3 font-bold text-ink-900">
+        Similar properties in {listing.city}
+      </h2>
+      <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+        {similarListings.map((similar) => (
+          <li key={similar.id}>
+            <ListingCard listing={similar} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function SimilarListingsSkeleton({ city }: { city: string }) {
+  return (
+    <section
+      className="mt-10 border-t border-ink-900/10 pt-8"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <h2 className="text-h3 font-bold text-ink-900">
+        Similar properties in {city}
+      </h2>
+      <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+        {[0, 1, 2].map((slot) => (
+          <li key={slot} aria-hidden="true">
+            <div className="h-full animate-pulse overflow-hidden rounded-card border border-ink-900/10 bg-white shadow-card">
+              <div className="aspect-[4/3] bg-ink-900/5" />
+              <div className="space-y-3 p-4">
+                <div className="h-4 w-24 rounded bg-ink-900/5" />
+                <div className="h-5 w-3/4 rounded bg-ink-900/5" />
+                <div className="h-4 w-1/2 rounded bg-ink-900/5" />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default async function ListingPage({ params }: PageProps) {
   const { slug } = await params;
   // Session and listing are independent; fetch them together so the public
@@ -109,27 +165,21 @@ export default async function ListingPage({ params }: PageProps) {
 
   if (!listing) notFound();
 
-  const [savedByViewer, similarListings] = await Promise.all([
-    session?.user
-      ? prisma.savedListing
-          .findUnique({
-            where: {
-              userId_listingId: {
-                userId: session.user.id,
-                listingId: listing.id,
-              },
+  // Only the saved flag is needed to paint above the fold. Similar listings
+  // stream in behind Suspense so the hero is not held back by a third query.
+  const savedByViewer = session?.user
+    ? await prisma.savedListing
+        .findUnique({
+          where: {
+            userId_listingId: {
+              userId: session.user.id,
+              listingId: listing.id,
             },
-            select: { id: true },
-          })
-          .then(Boolean)
-      : Promise.resolve(false),
-    getSimilarListings({
-      id: listing.id,
-      city: listing.city,
-      state: listing.state,
-      type: listing.type,
-    }),
-  ]);
+          },
+          select: { id: true },
+        })
+        .then(Boolean)
+    : false;
 
   const referrer = (await headers()).get("referer");
 
@@ -326,20 +376,16 @@ export default async function ListingPage({ params }: PageProps) {
             </a>
           </section>
 
-          {similarListings.length > 0 ? (
-            <section className="mt-10 border-t border-ink-900/10 pt-8">
-              <h2 className="text-h3 font-bold text-ink-900">
-                Similar properties in {listing.city}
-              </h2>
-              <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
-                {similarListings.map((similar) => (
-                  <li key={similar.id}>
-                    <ListingCard listing={similar} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          <Suspense fallback={<SimilarListingsSkeleton city={listing.city} />}>
+            <SimilarListings
+              listing={{
+                id: listing.id,
+                city: listing.city,
+                state: listing.state,
+                type: listing.type,
+              }}
+            />
+          </Suspense>
         </div>
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">

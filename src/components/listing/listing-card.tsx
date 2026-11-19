@@ -42,7 +42,7 @@ export function ListingCard({
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             loading={eager ? "eager" : "lazy"}
-            fetchPriority={eager ? "high" : undefined}
+            fetchPriority={eager ? "high" : "low"}
             className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
