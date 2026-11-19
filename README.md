@@ -346,6 +346,7 @@ docs/
 - [`docs/decisions/`](docs/decisions) — ADRs: JSON attributes, audit-in-action.
 - [`docs/case-study.md`](docs/case-study.md) — the STAR write-up, with CV bullets.
 - [`docs/demo-script.md`](docs/demo-script.md) — the 90-second reviewer path.
+- [`docs/social/`](docs/social) — the 1200 × 630 social card and ready-to-paste launch copy.
 - [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) — the phased plan with evidence.
 
 ## Security notes

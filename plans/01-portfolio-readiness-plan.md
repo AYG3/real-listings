@@ -1199,9 +1199,9 @@ This does **not** close the Phase 3 LCP criterion, which is defined against Ligh
 | 2 | Architecture diagram | ✅ | Inline Mermaid in the README (renders on GitHub, no image to go stale), plus the deeper [architecture](../docs/architecture.md) and [authorization](../docs/authorization.md) docs. |
 | 3 | Metrics table with real numbers | ✅ | 91 tests, 0 ESLint warnings, 0 `any`, LCP 1 584 ms median with the profile named, 1 053 KB payload. Lighthouse is explicitly *not* claimed; the method is printed beside each number. |
 | 4 | Screenshots | ✅ | Captured from the production build through headless Chrome over CDP at 1440 × 900 (the integrated browser panel is ~890 px wide, which produced tablet-width crops on the first attempt). |
-| 5 | Social preview (1280 × 640) | ◻️ | The Next.js `opengraph-image` route already renders one at request time; a static file for the repo's social preview needs the repo settings UI. |
+| 5 | Social preview | ✅ | The app's own `opengraph-image` route renders a 1200 × 630 card; exported to [`docs/social/og-1200x630.png`](../docs/social/og-1200x630.png) for the repo settings, with the description, topics and post copy in [`docs/social/launch-post.md`](../docs/social/launch-post.md). Uploading it is a repo-settings step. |
 | 6 | Repo polish | ⚠️ | `LICENSE` (MIT), `CONTRIBUTING.md`, `docs/case-study.md` added; tag `v1.0.0-portfolio` created locally. Description, topics and a published release need `gh` auth. |
-| 7 | Friendly 404 | ✅ | [`not-found.tsx`](../src/app/not-found.tsx) existed already: 404 label, "This page does not exist", a market-removed explanation, and two ways back. |
+| 7 | Friendly 404 | ✅ | [`not-found.tsx`](../src/app/not-found.tsx): verified over HTTP — an unknown path returns **404** with "This page does not exist", a removed-from-market explanation and two ways back. |
 | 8 | STAR case study | ✅ | [`docs/case-study.md`](../docs/case-study.md) — situation, task, action, result, plus four CV bullets drawn from the measured numbers. |
 | 9 | Custom domain | ◻️ | Blocked with deployment. |
 
