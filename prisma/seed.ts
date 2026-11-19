@@ -63,6 +63,30 @@ const agentProfiles: Record<
   ),
 };
 
+// Cover photos are vendored in public/ so the image optimizer never has to
+// fetch a third-party host on first render (that cold fetch cost ~2 s and
+// dominated LCP). Secondary photos stay remote and are optimised on demand.
+const LOCAL_PHOTOS = new Set([
+  "photo-1564013799919-ab600027ffc6",
+  "photo-1580587771525-78b9dba3b914",
+  "photo-1600596542815-ffad4c1539a9",
+  "photo-1613490493576-7fde63acd811",
+  "photo-1512917774080-9991f1c4c750",
+  "photo-1570129477492-45c003edd2be",
+  "photo-1500382017468-9049fed747ef",
+  "photo-1600585154340-be6161a56a0c",
+  "photo-1600607687939-ce8a6c25118c",
+  "photo-1600566753086-00f18fb6b3ea",
+  "photo-1600047509807-ba8f99d2cdde",
+  "photo-1605276374104-dee2a0ed3cd6",
+]);
+
+function localPhotoUrl(photo: string): string {
+  return LOCAL_PHOTOS.has(photo)
+    ? `/images/listings/${photo}.jpg`
+    : `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1200&q=65`;
+}
+
 async function main() {
   const { default: prisma } = await import("@/lib/prisma");
   const { auth } = await import("@/lib/auth/auth");
@@ -173,7 +197,7 @@ async function main() {
     await prisma.listingImage.createMany({
       data: item.photos.map((photo, position) => ({
         listingId: listing.id,
-        url: `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1200&q=65`,
+        url: localPhotoUrl(photo),
         publicId: `seed/${item.slug}/${position}`,
         order: position,
         isCover: position === 0,

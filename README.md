@@ -76,6 +76,8 @@ All variables are documented in [`.env.example`](.env.example). The minimum need
 
 > **Supabase connection modes matter.** Point `DATABASE_URL` at the **transaction** pooler (`...:6543/...?pgbouncer=true`). The session pooler on port 5432 allows only a handful of clients and will throw `(EMAXCONNSESSION) max clients reached` once dev reloads or a few serverless instances open pools. Use the session/direct connection (`DIRECT_URL`) only for migrations.
 
+> **Keep the client pool short-lived.** The pool in [`src/lib/prisma.ts`](src/lib/prisma.ts) caps at 5 connections and retires idle ones after 10 seconds. Do not pin `min` connections or hold sockets idle for minutes: the pooler closes what it considers idle, and a connection it closed still looks healthy to `pg` until the next query fails with `P1017 ConnectionClosed`. The cost of reconnecting is real (~0.7 s TLS handshake from a different region), which is why the read paths batch their queries instead of spreading them over several round trips — see [the Phase 3 latency notes](plans/01-portfolio-readiness-plan.md#phase-3--lcp-and-render-latency).
+
 ### Seeded accounts (local only)
 
 | Role | Email | Password |

@@ -53,9 +53,10 @@ function buildOrderBy(
   }
 }
 
+// The card renders the cover photo and scalar fields only — including the
+// agent relation here would cost an extra round trip per listing grid.
 const cardInclude = {
   images: { orderBy: { order: "asc" }, take: 1 },
-  agent: { select: { id: true, name: true, image: true } },
 } satisfies Prisma.ListingInclude;
 
 export type ListingCardData = Prisma.ListingGetPayload<{

@@ -89,7 +89,9 @@ export function ListingGallery({
           src={cover.url}
           alt={title}
           fill
-          priority
+          preload
+          loading="eager"
+          fetchPriority="high"
           sizes="(min-width: 1024px) 60vw, 100vw"
           className="object-cover"
         />

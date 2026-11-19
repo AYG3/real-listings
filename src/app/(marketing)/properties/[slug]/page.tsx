@@ -29,31 +29,42 @@ import {
   toNumber,
 } from "@/lib/format";
 import { getSimilarListings } from "@/lib/listing/queries";
+import { serializeJsonLd } from "@/lib/listing/json-ld";
 import { EnquiryForm } from "./_components/enquiry-form";
 import { ListingGallery } from "./_components/listing-gallery";
 import { SaveButton } from "./_components/save-button";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-const getListing = cache(async (slug: string) =>
-  prisma.listing.findFirst({
-    where: { slug, status: "PUBLISHED" },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      agent: {
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          image: true,
-          agencyName: true,
-          bio: true,
-          agentStatus: true,
-        },
+// One relation `include` is three sequential round trips on Prisma's engine, and
+// each trip to the database is ~250ms away. Fetching the relations by slug in
+// parallel keeps the page at one round trip instead of three.
+const getListing = cache(async (slug: string) => {
+  const where = { slug, status: "PUBLISHED" as const };
+  const [listing, images, agent] = await Promise.all([
+    prisma.listing.findFirst({ where }),
+    prisma.listingImage.findMany({
+      where: { listing: where },
+      orderBy: { order: "asc" },
+    }),
+    prisma.user.findFirst({
+      where: { listings: { some: where } },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        image: true,
+        agencyName: true,
+        bio: true,
+        agentStatus: true,
       },
-    },
-  }),
-);
+    }),
+  ]);
+
+  if (!listing || !agent) return null;
+
+  return { ...listing, images, agent };
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -92,11 +103,11 @@ function asText(value: unknown): string | null {
 
 export default async function ListingPage({ params }: PageProps) {
   const { slug } = await params;
-  const listing = await getListing(slug);
+  // Session and listing are independent; fetch them together so the public
+  // page pays one database round trip instead of two.
+  const [listing, session] = await Promise.all([getListing(slug), getSession()]);
 
   if (!listing) notFound();
-
-  const session = await getSession();
 
   const [savedByViewer, similarListings] = await Promise.all([
     session?.user
@@ -205,11 +216,15 @@ export default async function ListingPage({ params }: PageProps) {
     },
   };
 
+  // A hostile title or description containing "</script>" must not break out
+  // of the JSON-LD block; the helper escapes `<` and line separators.
+  const jsonLdHtml = serializeJsonLd(jsonLd);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
       />
 
       <nav aria-label="Breadcrumb" className="text-sm">
