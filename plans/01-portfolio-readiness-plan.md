@@ -889,7 +889,7 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 
 | Metric | Before | Unthrottled | Mobile + 4G throttle + 4× CPU | Lighthouse mobile |
 | --- | --- | --- | --- | --- |
-| Detail page HTML complete | 3.5 s cold / 1.1–1.7 s warm | 0.9 s warm, 0.01 s cached | — | — |
+| Detail page HTML complete | 3.5 s cold / 1.1–1.7 s warm | 0.6–0.9 s warm | — | — |
 | FCP | 1.85 s | 0.73 s | 0.71–0.85 s | 0.91 s |
 | LCP | 3.64 s | 1.69 s | 2.10–2.37 s | 2.97–3.02 s |
 | CLS | — | 0 | 0 | 0 |
@@ -897,7 +897,7 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 
 **What is left on the table:** the fix for the remaining gap is not another micro-optimisation of this page. Either the deployment moves next to the database and behind a CDN (removing the 1.6 Mbps-against-460 KiB problem), or the route gets a static shell so the hero image is in the first document byte. Both are Phase 7 items; the revalidation story below is already in place for the second.
 
-**Caching, and why not `unstable_cache`:** the listing read is cached for 15 s in-process ([`public-cache.ts`](../src/lib/listing/public-cache.ts)) and cleared by every listing mutation, so repeat views render in ~10 ms instead of ~0.9 s. The framework's `unstable_cache` was tried first and rejected: without Cache Components its `revalidate` window was not honoured, and an entry written while a listing was published kept being served after it returned to draft — a moderation leak rather than a performance trade-off. `updateTag`/`revalidateTag` (both require Cache Components to tag non-`fetch` data) were therefore also out. The TTL bounds staleness to 15 s for any path that misses an invalidation, and `public-cache.test.ts` locks that behaviour.
+**Caching, and why not `unstable_cache`:** the listing read is cached for 15 s in-process ([`public-cache.ts`](../src/lib/listing/public-cache.ts)) and cleared by every listing mutation, which removes three of the four round trips from the render. A repeat view drops from ~1.7 s to ~0.6 s; the residue is the session lookup plus the streamed similar-listings query, both of which still hit Supabase on every request. The framework's `unstable_cache` was tried first and rejected: without Cache Components its `revalidate` window was not honoured, and an entry written while a listing was published kept being served after it returned to draft — a moderation leak rather than a performance trade-off. `updateTag`/`revalidateTag` (both require Cache Components to tag non-`fetch` data) were therefore also out. The TTL bounds staleness to 15 s for any path that misses an invalidation, and `public-cache.test.ts` locks that behaviour.
 
 **Cover photos are served locally — verified.** On the live detail page the hero's `img.currentSrc` is `/_next/image?url=%2Fimages%2Flistings%2Fphoto-1564013799919-ab600027ffc6.jpg&w=1920&q=62`, i.e. the vendored file, not an Unsplash URL. The vendored sources are 1200×800.
 
