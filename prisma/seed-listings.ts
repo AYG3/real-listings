@@ -59,8 +59,62 @@ const LAGOS_AGENT = "agent@alara.ng";
 const CHIDI = "chidi@alara.ng";
 const GRACE = "grace@alara.ng";
 const MUSA = "musa@alara.ng";
+const DEMO_AGENT = "demo-agent@alara.ng";
 
 export const showcaseListings: ShowcaseListing[] = [
+  {
+    slug: "wuse-2-3-bedroom-terrace",
+    title: "3-bedroom terrace in Wuse 2",
+    description:
+      "A recently built terrace house on a quiet close in Wuse 2, five minutes from the Wuse market road. Three bedrooms, all en-suite, a fitted kitchen with a store, and a small yard behind the kitchen door. The estate runs a shared borehole and a standby generator, and there are two parking spaces in front. It suits a family that wants to be central without taking on a full detached compound.",
+    type: "HOUSE",
+    status: "PUBLISHED",
+    price: 96_000_000,
+    address: "12 Yakubu Gowon Crescent",
+    city: "Abuja",
+    state: "FCT",
+    agentEmail: DEMO_AGENT,
+    attributes: {
+      transactionType: "sale",
+      bedrooms: 3,
+      bathrooms: 3,
+      toilets: 4,
+      parking: 2,
+      size: "210",
+      sizeUnit: "sqm",
+      yearBuilt: 2021,
+      negotiable: true,
+    },
+    photos: [
+      "photo-1570129477492-45c003edd2be",
+      "photo-1512917774080-9991f1c4c750",
+    ],
+  },
+  {
+    slug: "ajah-half-plot-with-documentation",
+    title: "Half plot in Ajah with documentation",
+    description:
+      "A half plot on a surveyed layout in Ajah, with a deed of assignment and a current survey plan. The land is dry, fenced on two sides, and sits on a graded road about 900 metres from the expressway. The estate association has started drainage work and there are already three completed houses on the street, so services are reachable without extending far.",
+    type: "LAND",
+    status: "PUBLISHED",
+    price: 24_500_000,
+    address: "Off Badore Road",
+    city: "Lekki",
+    state: "Lagos",
+    agentEmail: DEMO_AGENT,
+    attributes: {
+      transactionType: "sale",
+      sizeInPlots: 0.5,
+      size: "300",
+      sizeUnit: "sqm",
+      titleType: "Deed of assignment",
+      surveyPlanAvailable: true,
+    },
+    photos: [
+      "photo-1500382017468-9049fed747ef",
+      "photo-1600585154340-be6161a56a0c",
+    ],
+  },
   {
     slug: "lekki-phase-1-4-bedroom-duplex",
     title: "4-bedroom duplex with a private garden",

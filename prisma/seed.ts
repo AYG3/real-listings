@@ -12,9 +12,12 @@ type SeedAccount = {
   password: string;
   role: SeedRole;
   phone?: string;
+  /** Read-only showcase accounts used by /demo. */
+  isDemo?: boolean;
 };
 
 const AGENT_PASSWORD = "AlaraAgent1!";
+const DEMO_PASSWORD = "DemoReadOnly1!";
 
 const accounts: SeedAccount[] = [
   {
@@ -38,6 +41,35 @@ const accounts: SeedAccount[] = [
   },
 ];
 
+/**
+ * One-click demo identities. They are real accounts with real roles, marked
+ * `isDemo` so every mutation refuses them; see lib/admin/guard.ts.
+ */
+const demoAccounts: SeedAccount[] = [
+  {
+    name: "Demo Admin",
+    email: "demo-admin@alara.ng",
+    password: DEMO_PASSWORD,
+    role: "ADMIN",
+    isDemo: true,
+  },
+  {
+    name: "Demo Agent",
+    email: "demo-agent@alara.ng",
+    password: DEMO_PASSWORD,
+    role: "AGENT",
+    phone: "+234 802 555 0199",
+    isDemo: true,
+  },
+  {
+    name: "Demo Buyer",
+    email: "demo-buyer@alara.ng",
+    password: DEMO_PASSWORD,
+    role: "BUYER",
+    isDemo: true,
+  },
+];
+
 const showcaseAccounts: SeedAccount[] = showcaseAgents.map((agent) => ({
   name: agent.name,
   email: agent.email,
@@ -54,6 +86,11 @@ const agentProfiles: Record<
     agencyName: "Alara Estates",
     phone: "+234 802 555 0100",
     bio: "Lagos-based agency listing houses and land across Lekki, Ikoyi and the mainland. Every property is inspected before it is published.",
+  },
+  "demo-agent@alara.ng": {
+    agencyName: "Alara Demo Desk",
+    phone: "+234 802 555 0199",
+    bio: "Read-only demo agent. The listings here are seeded showcase data you can browse, filter and enquire about.",
   },
   ...Object.fromEntries(
     showcaseAgents.map((agent) => [
@@ -87,11 +124,11 @@ function localPhotoUrl(photo: string): string {
     : `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1200&q=65`;
 }
 
-async function main() {
+export async function main() {
   const { default: prisma } = await import("@/lib/prisma");
   const { auth } = await import("@/lib/auth/auth");
 
-  for (const account of [...accounts, ...showcaseAccounts]) {
+  for (const account of [...accounts, ...showcaseAccounts, ...demoAccounts]) {
     const existing = await prisma.user.findUnique({
       where: { email: account.email },
     });
@@ -116,6 +153,7 @@ async function main() {
         name: account.name,
         role: account.role,
         emailVerified: true,
+        isDemo: account.isDemo ?? false,
         ...(account.phone ? { phone: account.phone } : {}),
         ...(profile
           ? {
@@ -185,6 +223,8 @@ async function main() {
       createdAt,
       publishedAt: item.status === "PUBLISHED" ? createdAt : null,
       viewCount: item.status === "PUBLISHED" ? 12 + index * 7 : 0,
+      // The reset script re-seeds exactly these rows.
+      isDemo: true,
     };
 
     const listing = await prisma.listing.upsert({
@@ -222,7 +262,11 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch((error) => {
-  console.error("Seed failed:", error);
-  process.exitCode = 1;
-});
+// Only run when invoked directly (`tsx prisma/seed.ts`), not when imported by
+// the demo reset script.
+if (process.argv[1] && /prisma\/seed\.ts$/.test(process.argv[1])) {
+  main().catch((error) => {
+    console.error("Seed failed:", error);
+    process.exitCode = 1;
+  });
+}

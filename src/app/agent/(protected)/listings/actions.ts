@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type ListingActionResult = {
   status: "success" | "error";
@@ -58,6 +59,10 @@ export async function updateListingStatus(
   }
 
   const session = await requireAgent();
+
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
+  }
 
   const listing = await prisma.listing.findFirst({
     where: { id: parsed.data.listingId, agentId: session.user.id },

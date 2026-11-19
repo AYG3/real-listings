@@ -56,6 +56,14 @@ export const auth = betterAuth({
         required: true,
         defaultValue: "BUYER",
         input: false
+      },
+      // Read-only demo accounts (Phase 6). Exposed on the session so guards
+      // can answer without another query.
+      isDemo: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false
       }
     }
   },

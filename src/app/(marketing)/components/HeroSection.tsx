@@ -109,7 +109,13 @@ export default async function HeroSection() {
               {stats.cities === 1 ? "city" : "cities"}
             </p>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/demo"
+                className={buttonStyles({ variant: "secondary", size: "md" })}
+              >
+                Take the demo
+              </Link>
               <Link
                 href="/properties"
                 className={buttonStyles({ variant: "secondary", size: "md" })}

@@ -8,7 +8,7 @@ import {
   invalidateListingCache,
   recordAudit,
 } from "@/lib/admin/moderation";
-import { DEMO_BLOCKED_MESSAGE, isDemoUser } from "@/lib/admin/guard";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type DecisionResult = { status: "success" | "error"; message: string };
 
@@ -51,8 +51,8 @@ export async function decideListing(
 
   const session = await requireAdmin();
 
-  if (isDemoUser(session.user)) {
-    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
   const listing = await prisma.listing.findUnique({
@@ -130,8 +130,8 @@ export async function decideAgent(
 
   const session = await requireAdmin();
 
-  if (isDemoUser(session.user)) {
-    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
   const agent = await prisma.user.findUnique({
@@ -207,8 +207,8 @@ export async function changeUserRole(
 
   const session = await requireAdmin();
 
-  if (isDemoUser(session.user)) {
-    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
   if (session.user.id === parsed.data.userId) {
@@ -272,8 +272,8 @@ async function setArchived(
 
   const session = await requireAdmin();
 
-  if (isDemoUser(session.user)) {
-    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
   const listing = await prisma.listing.findUnique({

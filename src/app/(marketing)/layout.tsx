@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Navbar from "./components/Navbar";
 import FooterSection from "./components/FooterSection";
+import { TourPill } from "@/components/demo/tour-pill";
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
@@ -8,6 +9,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       <Navbar />
       <main className="flex-1">{children}</main>
       <FooterSection />
+      <TourPill />
     </>
   );
 }

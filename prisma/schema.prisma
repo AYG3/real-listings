@@ -70,6 +70,9 @@ model User {
   sessions Session[]
   accounts Account[]
 
+  /// Read-only demo accounts. Guarded by lib/demo/guard.ts — see Phase 6.
+  isDemo Boolean @default(false)
+
   // Agent verification and public profile
   agentStatus       AgentStatus? @default(PENDING)
   agencyName        String?
@@ -97,6 +100,9 @@ model Listing {
   publishedAt     DateTime?
   viewCount       Int       @default(0)
   rejectionReason String?
+
+  /// Seeded showcase data; the demo reset script keys off this.
+  isDemo Boolean @default(false)
 
   // Location
   address   String

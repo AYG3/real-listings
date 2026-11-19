@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type InquiryActionResult = { status: "success" | "error"; message: string };
 
@@ -36,6 +37,10 @@ export async function updateInquiry(
   }
 
   const session = await requireAgent();
+
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
+  }
 
   const inquiry = await prisma.inquiry.findFirst({
     where: { id: parsed.data.inquiryId, listing: { agentId: session.user.id } },

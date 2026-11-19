@@ -69,6 +69,11 @@ export function SaveButton({
       if (result.requiresAuth) {
         setSaved(!next);
         setNote("Sign in to save listings across devices.");
+        return;
+      }
+      if (result.demoReadOnly) {
+        setSaved(!next);
+        setNote("Read-only demo account — saves are disabled here.");
       }
     });
   }

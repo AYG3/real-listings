@@ -7,6 +7,7 @@ import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type UpdateListingState = {
   status: "idle" | "error";
@@ -55,6 +56,10 @@ export async function updateListing(
   formData: FormData,
 ): Promise<UpdateListingState> {
   const session = await requireAgent();
+
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
+  }
 
   const existing = await prisma.listing.findFirst({
     where: { id: listingId, agentId: session.user.id },

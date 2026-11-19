@@ -4,7 +4,7 @@ A three-sided property marketplace for Nigeria: buyers discover verified houses 
 
 Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudinary.
 
-> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery, the enquiry/save loop, the agent workspace and the admin control tower (Phases 0–5) are complete; demo mode and the test suite are next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
+> **Status:** portfolio-ready demo. Foundation, design system, public discovery, the enquiry/save loop, the agent workspace, the admin control tower and a read-only demo mode (Phases 0–6) are complete; critical-path tests and the bundle budget are next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the roadmap and [`docs/demo-script.md`](docs/demo-script.md) for the 90-second tour.
 
 ## Stack
 
@@ -42,6 +42,8 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 - **Moderation queue** at `/admin/moderation`: approve a draft to publish it, or reject / request changes with a reason that lands on the agent's listing card.
 - **Agent verification** in the same queue: verify or reject an account; the verified badge on the public profile reads the same column.
 - **Audit log** at `/admin/audit`: who changed what, from which state to which, with the reason attached.
+- **Read-only demo** at `/demo`: three one-click identities (visitor, agent, admin) that sign in through the real auth endpoint, a persistent read-only banner, `npm run demo:reset` for the nightly reset, and a dismissible portfolio tour on public pages.
+- **Case study** at `/case-study`: problem, users, architecture, three engineering decisions with trade-offs, and the metrics table.
 - **Users table** at `/admin/users`: roles, agent status, join date and activity per account, with an audited role change.
 - **Type-to-confirm** dialogs on destructive actions (archive, reject listing, reject agent, change role), plus a read-only guard for demo accounts (`DEMO_MODE`).
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
@@ -50,8 +52,8 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 ## In progress
 
 - Buyer `/account` pages for saved listings and enquiries.
-- One-click, read-only demo mode for reviewers (Phase 6).
-- Automated tests (Phase 7) — 6 unit tests exist (`npm test`); CI runs lint, typecheck, tests and build.
+- Phase 7 credibility work: critical-path E2E tests, and the bundle budget that the open LCP measurement needs.
+- Automated tests stand at 6 unit tests (`npm test`); CI runs lint, typecheck, tests and build.
 
 ## Getting started
 
@@ -95,6 +97,7 @@ All variables are documented in [`.env.example`](.env.example). The minimum need
 | Agent | `agent@alara.ng` | `AlaraAgent1!` |
 | Buyer | `buyer@alara.ng` | `AlaraBuyer1!` |
 | Agents (showcase) | `chidi@alara.ng`, `grace@alara.ng`, `musa@alara.ng` | `AlaraAgent1!` |
+| Demo (read-only) | `demo-admin@alara.ng`, `demo-agent@alara.ng`, `demo-buyer@alara.ng` | `DemoReadOnly1!` |
 
 The seed also creates **18 showcase listings** (16 published, 2 drafts) across Lagos, FCT, Rivers, Oyo, Enugu and Kano — houses and land, sale and rent — plus one or more photos each. Listings upsert by slug, so re-running the seed resets the demo content rather than duplicating it.
 
@@ -113,6 +116,7 @@ Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboa
 | `npm run db:migrate` | Create and apply a migration in development. |
 | `npm run db:seed` | Seed the ADMIN / AGENT / BUYER accounts (idempotent). |
 | `npm run db:studio` | Open Prisma Studio. |
+| `npm run demo:reset` | Restore the demo dataset (idempotent); wire it to a nightly cron. |
 
 ## Project structure
 

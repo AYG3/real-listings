@@ -6,6 +6,7 @@ import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
+import { isDemoSessionUser } from "@/lib/demo/guard";
 
 function getString(formData: FormData, key: string, fallback = "") {
   const value = formData.get(key);
@@ -35,6 +36,10 @@ function createSlug(title: string) {
 
 export async function createListing(formData: FormData) {
   const session = await requireAgent();
+
+  if (isDemoSessionUser(session.user)) {
+    redirect("/agent/listings?demo=1");
+  }
 
   const title = getString(formData, "title", "Untitled property");
   const attributes: Record<string, string | number | boolean> = {

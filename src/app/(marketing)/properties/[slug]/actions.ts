@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { getSession } from "@/lib/auth/guards";
 import { checkRateLimit, clientKey, enquirySchema } from "@/lib/listing/inquiry";
 import prisma from "@/lib/prisma";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type EnquiryState = {
   status: "success" | "error";
@@ -13,10 +14,24 @@ export type EnquiryState = {
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1_000;
 
+async function demoRefusalForSession() {
+  const session = await getSession();
+  if (isDemoSessionUser(session?.user)) {
+    return {
+      status: "error" as const,
+      message: DEMO_READ_ONLY_MESSAGE,
+    };
+  }
+  return null;
+}
+
 export async function submitEnquiry(
   _previous: EnquiryState,
   formData: FormData,
 ): Promise<EnquiryState> {
+  const blocked = await demoRefusalForSession();
+  if (blocked) return blocked;
+
   const parsed = enquirySchema.safeParse({
     listingId: formData.get("listingId"),
     name: formData.get("name"),
@@ -111,7 +126,11 @@ export async function submitEnquiry(
   };
 }
 
-export type SavedResult = { saved: boolean; requiresAuth?: boolean };
+export type SavedResult = {
+  saved: boolean;
+  requiresAuth?: boolean;
+  demoReadOnly?: boolean;
+};
 
 export async function toggleSavedListing(
   listingId: string,
@@ -120,6 +139,10 @@ export async function toggleSavedListing(
   const session = await getSession();
 
   if (!session?.user) return { saved: false, requiresAuth: true };
+
+  if (isDemoSessionUser(session.user)) {
+    return { saved: save, demoReadOnly: true };
+  }
 
   if (save) {
     await prisma.savedListing.upsert({

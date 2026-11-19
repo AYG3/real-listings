@@ -80,6 +80,16 @@ export default function FooterSection() {
                   Create an account
                 </Link>
               </li>
+              <li>
+                <Link href="/demo" className="transition-colors hover:text-white">
+                  Try the read-only demo
+                </Link>
+              </li>
+              <li>
+                <Link href="/case-study" className="transition-colors hover:text-white">
+                  Case study
+                </Link>
+              </li>
             </ul>
           </div>
 

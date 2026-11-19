@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
 export type ProfileState = {
   status: "idle" | "success" | "error";
@@ -33,6 +34,10 @@ export async function updateAgentProfile(
   formData: FormData,
 ): Promise<ProfileState> {
   const session = await requireAgent();
+
+  if (isDemoSessionUser(session.user)) {
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
+  }
 
   const parsed = schema.safeParse({
     name: formData.get("name"),

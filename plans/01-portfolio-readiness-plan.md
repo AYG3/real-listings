@@ -29,7 +29,7 @@
 | **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
-| 6 — Demo mode & recruiter theatre | ⬜ Not started |
+| **6 — Demo mode & recruiter theatre** | ✅ **Complete** — [details](#phase-6--implementation-progress) |
 | 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
 | 8 — Portfolio packaging & launch | ⬜ Not started |
 
@@ -1044,12 +1044,39 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 
 **Acceptance criteria**
 
-- [ ] From the homepage, a stranger reaches a populated admin dashboard in ≤ 3 clicks and ≤ 15 seconds.
-- [ ] Demo users see a persistent "read-only demo" banner.
-- [ ] Attempting a mutation in demo mode produces a friendly explanation, not a crash.
-- [ ] Nightly reset restores demo data exactly (run it twice to prove idempotency).
-- [ ] The tour is dismissible, keyboard accessible, and respects reduced motion.
-- [ ] The case-study page renders without login.
+- [x] From the homepage, a stranger reaches a populated admin dashboard in ≤ 3 clicks and ≤ 15 seconds. **Two clicks**: "Take the demo" → the Admin card → `/admin/overview` with live counts.
+- [x] Demo users see a persistent "read-only demo" banner. Rendered server-side in the root layout, so it is present before hydration and links back to `/demo`.
+- [x] Attempting a mutation in demo mode produces a friendly explanation, not a crash. Verified: changing a role as `demo-admin@alara.ng` returns "This is a read-only demo account — every screen is open, but nothing can be changed. The data resets nightly." and the row is unchanged.
+- [x] Nightly reset restores demo data exactly (run it twice to prove idempotency). `npm run demo:reset` run twice: both runs end at 20 demo listings (18 published, 2 draft), 3 demo accounts, second run cleared 0 rows.
+- [x] The tour is dismissible, keyboard accessible, and respects reduced motion. Escape closes it, dismissal persists in `localStorage` across reloads, and transitions carry `motion-reduce:transition-none`.
+- [x] The case-study page renders without login. Anonymous `GET /case-study` → 200 with the decisions section.
+
+#### Phase 6 — Implementation progress
+
+**Status: complete.** Verified 19 November 2026.
+
+| # | Scope item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | Demo dataset + `isDemo` flags | ✅ | `users.isDemo` / `listings.isDemo` (migration `20261119140000_demo_mode`). The seed creates three demo accounts, marks every showcase listing `isDemo`, and exposes `main()` so the reset can reuse it. Two extra listings belong to the demo agent so the agent dashboard is populated. |
+| 2 | `/demo` route with three cards | ✅ | [`demo/page.tsx`](<../src/app/(marketing)/demo/page.tsx>) — visitor, agent and admin cards with what each side shows. One-click entry signs in through `/api/auth/sign-in/email`, the same endpoint the login form uses. |
+| 3 | Read-only enforcement | ✅ | [`lib/demo/guard.ts`](../src/lib/demo/guard.ts) reads `isDemo` off the session (exposed via Better Auth `additionalFields`) and is called by every mutation: enquiry, save, listing status, listing edit, listing create, enquiry status, profile, moderation, role change, archive. Reset: `npm run demo:reset` and `POST /api/demo/reset` (secret-guarded, 404 unless `DEMO_MODE`). |
+| 4 | Guided tour | ✅ | [`components/demo/tour-pill.tsx`](../src/components/demo/tour-pill.tsx) — floating pill on marketing pages, four stops, Escape to close, dismissal stored via `useSyncExternalStore` so SSR and hydration agree. |
+| 5 | `/case-study` | ✅ | Problem, users, architecture, three decisions with explicit trade-offs, a metrics table and "what I'd do next". Linked from the footer and `/demo`. |
+| 6 | Demo script | ✅ | [`docs/demo-script.md`](../docs/demo-script.md) — timestamped 90-second path with what to click and what to say. |
+
+**Verification evidence**
+
+| Check | Result |
+| --- | --- |
+| Homepage → admin dashboard | ✅ 2 clicks, demo banner present, real counts (31 listings, 11 drafts, 5 agents) |
+| `/demo` as anonymous visitor | ✅ 200, no banner, three cards |
+| `/case-study` as anonymous visitor | ✅ 200 with content |
+| Demo mutation | ✅ friendly refusal, data unchanged |
+| Tour | ✅ opens (4 stops), Escape closes, dismissal survives reload |
+| Reset ×2 | ✅ identical end state, second run cleared 0 |
+| `tsc` / `eslint` / `vitest` / `next build` | ✅ clean |
+
+**Deliberate design note:** demo accounts are real accounts with real roles, not a separate read-only mode. That means the demo proves the actual authorization path (the admin demo genuinely is an ADMIN) while the `isDemo` flag is the single extra predicate that stops writes. The nightly reset exists because a visitor can still act as a *guest* on the public site — guest enquiries are the one mutation a demo cannot block without breaking the enquiry demo, so they are cleared on reset instead.
 
 ---
 
