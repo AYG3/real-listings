@@ -1,6 +1,18 @@
 import { Input, Textarea } from "@/components/ui/field";
 
-export default function Location() {
+type LocationDefaults = {
+  state?: string;
+  city?: string;
+  area?: string;
+  landmark?: string;
+  address?: string;
+};
+
+export default function Location({
+  defaults,
+}: {
+  defaults?: LocationDefaults;
+} = {}) {
   return (
     <section className="space-y-4">
       <div>
@@ -9,16 +21,39 @@ export default function Location() {
       </div>
 
       <div className="grid gap-x-4 md:grid-cols-2">
-        <Input label="State" name="state" placeholder="Lagos" required />
-        <Input label="City" name="city" placeholder="Lekki" required />
-        <Input label="Area" name="area" placeholder="Phase 2" />
-        <Input label="Landmark" name="landmark" placeholder="Near Admiralty Way" />
+        <Input
+          label="State"
+          name="state"
+          placeholder="Lagos"
+          defaultValue={defaults?.state}
+          required
+        />
+        <Input
+          label="City"
+          name="city"
+          placeholder="Lekki"
+          defaultValue={defaults?.city}
+          required
+        />
+        <Input
+          label="Area"
+          name="area"
+          placeholder="Phase 2"
+          defaultValue={defaults?.area}
+        />
+        <Input
+          label="Landmark"
+          name="landmark"
+          placeholder="Near Admiralty Way"
+          defaultValue={defaults?.landmark}
+        />
       </div>
 
       <Textarea
         label="Street address"
         name="address"
         rows={2}
+        defaultValue={defaults?.address}
         placeholder="14 Admiralty Way, Lekki Phase 1"
       />
     </section>

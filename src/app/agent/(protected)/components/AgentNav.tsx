@@ -8,6 +8,7 @@ import { initials } from "@/lib/format";
 import {
   LayoutDashboard,
   Menu,
+  MessageSquare,
   UserCircle,
   Home,
   X,
@@ -16,6 +17,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
   { label: "My Listings", href: "/agent/listings", icon: Home },
+  { label: "Enquiries", href: "/agent/enquiries", icon: MessageSquare },
   { label: "Profile", href: "/agent/profile", icon: UserCircle },
 ];
 

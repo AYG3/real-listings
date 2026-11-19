@@ -1,19 +1,59 @@
+import { BadgeCheck, ShieldQuestion } from "lucide-react";
 import { requireAgent } from "@/lib/auth/guards";
-import {
-  Building2,
-  Mail,
-  MapPin,
-  Phone,
-  Upload,
-  UserCircle,
-} from "lucide-react";
+import prisma from "@/lib/prisma";
+import { initials } from "@/lib/format";
+import { ProfileForm } from "./_components/profile-form";
+
+const statusCopy: Record<string, { label: string; tone: "success" | "warning"; body: string }> = {
+  VERIFIED: {
+    label: "Verified",
+    tone: "success",
+    body: "Your listings can be published straight away and your profile shows the verified badge.",
+  },
+  PENDING: {
+    label: "Verification pending",
+    tone: "warning",
+    body: "An admin still has to approve your account. Until then, listings you submit wait in review.",
+  },
+  REJECTED: {
+    label: "Verification rejected",
+    tone: "warning",
+    body: "An admin rejected the last verification attempt. Update your details and contact support.",
+  },
+  SUSPENDED: {
+    label: "Suspended",
+    tone: "warning",
+    body: "Your account is suspended, so your listings are not visible publicly.",
+  },
+};
 
 export default async function ProfilePage() {
-  await requireAgent();
+  const session = await requireAgent();
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      email: true,
+      phone: true,
+      image: true,
+      agencyName: true,
+      bio: true,
+      agentStatus: true,
+      verifiedAt: true,
+      _count: { select: { listings: true } },
+    },
+  });
+
+  if (!user) return null;
+
+  const status = statusCopy[user.agentStatus ?? "PENDING"] ?? statusCopy.PENDING;
+  const StatusIcon = status.tone === "success" ? BadgeCheck : ShieldQuestion;
+
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8">
+        <header className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
             Agent
           </p>
@@ -21,178 +61,41 @@ export default async function ProfilePage() {
             Profile
           </h1>
           <p className="mt-2 text-sm font-medium text-gray-500">
-            Manage your company details, contact information, and verification documents.
+            Manage the details buyers see on your public agent page.
+          </p>
+        </header>
+
+        <div
+          className={`mb-6 flex flex-wrap items-center gap-3 rounded-lg border p-4 ${
+            status.tone === "success"
+              ? "border-emerald-200 bg-emerald-50/70"
+              : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          <StatusIcon
+            className={`h-5 w-5 ${status.tone === "success" ? "text-forest-700" : "text-amber-700"}`}
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-950">{status.label}</p>
+            <p className="text-sm text-gray-600">{status.body}</p>
+          </div>
+          <p className="ml-auto text-xs font-semibold text-gray-500">
+            {user._count.listings} listing{user._count.listings === 1 ? "" : "s"}
           </p>
         </div>
 
-        <form className="space-y-6">
-          {/* Company */}
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-forest-700" aria-hidden="true" />
-                <h2 className="text-lg font-semibold text-gray-950">Company</h2>
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                Your business or agency details.
-              </p>
-            </div>
-
-            <div className="grid gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Business Name
-                </label>
-                <input
-                  name="businessName"
-                  type="text"
-                  placeholder="Your Agency Ltd."
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-950 outline-none placeholder:text-gray-400 focus:border-forest-700"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Contact Details */}
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-forest-700" aria-hidden="true" />
-                <h2 className="text-lg font-semibold text-gray-950">Contact Details</h2>
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                How buyers and admins can reach you.
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <Mail className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                  <input
-                    name="email"
-                    type="email"
-                    placeholder="agent@example.com"
-                    className="w-full bg-transparent text-sm text-gray-950 outline-none placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Phone
-                </label>
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <Phone className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                  <input
-                    name="phone"
-                    type="tel"
-                    placeholder="+234 800 000 0000"
-                    className="w-full bg-transparent text-sm text-gray-950 outline-none placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  City
-                </label>
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <MapPin className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                  <input
-                    name="city"
-                    type="text"
-                    placeholder="Lagos"
-                    className="w-full bg-transparent text-sm text-gray-950 outline-none placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  State
-                </label>
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <MapPin className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                  <input
-                    name="state"
-                    type="text"
-                    placeholder="Lagos"
-                    className="w-full bg-transparent text-sm text-gray-950 outline-none placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Profile Picture */}
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5 text-forest-700" aria-hidden="true" />
-                <h2 className="text-lg font-semibold text-gray-950">Profile Picture</h2>
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                A clear photo helps buyers recognise you.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-2xl font-bold text-forest-700">
-                AG
-              </div>
-
-              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
-                <Upload className="h-4 w-4" aria-hidden="true" />
-                Upload photo
-                <input type="file" name="profilePicture" className="hidden" accept="image/*" />
-              </label>
-            </div>
-          </section>
-
-          {/* Verification Documents */}
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-forest-700" aria-hidden="true" />
-                <h2 className="text-lg font-semibold text-gray-950">Verification Documents</h2>
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                Upload any required documents for verification (if required).
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-sm text-gray-500 transition-colors hover:border-forest-700/35 hover:bg-emerald-50/40">
-                <Upload className="h-6 w-6" aria-hidden="true" />
-                <span className="font-semibold text-gray-600">
-                  Click to upload
-                </span>
-                <span className="text-xs">PDF, PNG, or JPG (max 5MB)</span>
-                <input type="file" name="verificationDocument" className="hidden" accept=".pdf,.png,.jpg,.jpeg" />
-              </label>
-            </div>
-          </section>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-forest-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-800"
-            >
-              Save Profile
-            </button>
-          </div>
-        </form>
+        <ProfileForm
+          defaults={{
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? "",
+            agencyName: user.agencyName ?? "",
+            bio: user.bio ?? "",
+            image: user.image,
+            initials: initials(user.name),
+          }}
+        />
       </div>
     </div>
   );

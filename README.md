@@ -4,7 +4,7 @@ A three-sided property marketplace for Nigeria: buyers discover verified houses 
 
 Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudinary.
 
-> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery and the enquiry/save loop (Phases 0–3) are complete; the real agent and admin workspaces are next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
+> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery, the enquiry/save loop and the real agent workspace (Phases 0–4) are complete; the admin control tower is next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
 
 ## Stack
 
@@ -31,15 +31,19 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 - **Real counts on the homepage** (`listing.count` + `groupBy`) and a hero search that actually navigates.
 - Email/password and Google sign-in through one role-aware `/login` (a portal deep link like `/admin/overview` sends you there with the right gate).
 - Role-based protection for the agent (`/agent/*`) and admin (`/admin/*`) portals, enforced in the proxy, the layout **and** every server action.
-- Agent listing creation with Cloudinary image upload, ordered images and a cover image. Agent submissions always enter moderation as drafts; only an admin can publish.
+- **Agent workspace** at `/agent/dashboard`: live counts, views, enquiry rate, a 14-day views sparkline and an activity feed, all aggregated from the agent's own rows.
+- **Agent listings** with search, status/type filters and sorting, plus working row actions — Edit, Publish, Unpublish, Mark under offer, Mark sold, Archive, Restore — as guarded server actions. Verified agents can publish directly; unverified ones stay in review.
+- **Listing editing** at `/agent/listings/[id]/edit`, including photo reordering, "set as cover" and removal, capped at 12 images.
+- **Enquiry inbox** at `/agent/enquiries`: filters, search, buyer contact details, reply notes, and `NEW → CONTACTED → VIEWING_SCHEDULED → CLOSED` transitions.
+- **Agent profile** editing (name, phone, agency, bio, avatar) with the verification state shown.
+- Agent listing creation with Cloudinary image upload, ordered images and a cover image. New submissions from unverified agents enter moderation as drafts.
 - Admin listing table with search, status filters, and a listing detail view.
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
 - `sitemap.xml` and `robots.txt` generated from the live catalogue.
 
 ## In progress
 
-- Real agent workspace: dashboards, listing actions, enquiry inbox (Phase 4).
-- Admin moderation from real data (Phase 5).
+- Admin moderation from real data (Phase 5), including the agent verification queue and audit log.
 - Buyer `/account` pages for saved listings and enquiries.
 - One-click, read-only demo mode for reviewers (Phase 6).
 - Automated tests (Phase 7); CI already runs lint, typecheck and build.

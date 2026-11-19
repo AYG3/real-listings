@@ -160,11 +160,16 @@ model Inquiry {
   message String
   status  InquiryStatus @default(NEW)
 
+  // Agent-side working state: the reply they sent, and when they touched it.
+  agentNote     String?
+  lastContactedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([listingId])
   @@index([buyerId])
+  @@index([listingId, status])
   @@map("inquiries")
 }
 

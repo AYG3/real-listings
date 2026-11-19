@@ -2,16 +2,18 @@
 
 import Image from "next/image";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  Eye,
+  ArrowDownUp,
   Home,
   MapPin,
+  Plus,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
 import { StatusPill } from "@/components/ui/badge";
+import { ListingActions } from "./listing-actions";
 import type { AgentListing, ListingStatus, ListingType } from "./listing-data";
 
 type ListingListProps = {
@@ -29,11 +31,12 @@ export function ListingList({ listings }: ListingListProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ListingStatus | "all">("all");
   const [type, setType] = useState<ListingType | "all">("all");
+  const [sort, setSort] = useState<"newest" | "price" | "views">("newest");
 
   const filteredListings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return listings.filter((listing) => {
+    const filtered = listings.filter((listing) => {
       const matchesQuery =
         !normalizedQuery ||
         [
@@ -52,12 +55,18 @@ export function ListingList({ listings }: ListingListProps) {
 
       return matchesQuery && matchesStatus && matchesType;
     });
-  }, [listings, query, status, type]);
+
+    return [...filtered].sort((a, b) => {
+      if (sort === "views") return b.views - a.views;
+      if (sort === "price") return b.priceValue - a.priceValue;
+      return b.createdAt - a.createdAt;
+    });
+  }, [listings, query, status, type, sort]);
 
   return (
     <div>
       <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_140px_160px]">
           <label className="flex h-12 items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 focus-within:border-forest-700/35 focus-within:bg-white">
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <input
@@ -101,8 +110,48 @@ export function ListingList({ listings }: ListingListProps) {
               <option value="LAND">Land</option>
             </select>
           </label>
+
+          <label className="flex h-12 items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-bold text-gray-600">
+            <ArrowDownUp className="h-4 w-4" aria-hidden="true" />
+            <select
+              value={sort}
+              onChange={(event) =>
+                setSort(event.target.value as "newest" | "price" | "views")
+              }
+              className="min-w-0 flex-1 bg-transparent outline-none"
+              aria-label="Sort listings"
+            >
+              <option value="newest">Newest first</option>
+              <option value="price">Highest price</option>
+              <option value="views">Most viewed</option>
+            </select>
+          </label>
         </div>
       </div>
+
+      {filteredListings.length === 0 ? (
+        <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
+          <h2 className="text-lg font-bold text-gray-950">
+            {listings.length === 0
+              ? "No listings yet"
+              : "No listings match those filters"}
+          </h2>
+          <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+            {listings.length === 0
+              ? "Create your first listing and it will appear here while an admin reviews it."
+              : "Try clearing the search or choosing a different status."}
+          </p>
+          {listings.length === 0 ? (
+            <Link
+              href="/agent/listings/create"
+              className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-forest-700 px-4 text-sm font-bold text-white"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Create your first listing
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-4">
         {filteredListings.map((listing) => (
@@ -150,26 +199,20 @@ export function ListingList({ listings }: ListingListProps) {
                   </div>
 
                   <p className="mt-2 text-sm font-medium text-gray-500">
-                    Submitted {listing.submittedAt}
+                    Submitted {listing.submittedAt} <span className="text-gray-300">/</span>{" "}
+                    {listing.views} view{listing.views === 1 ? "" : "s"}{" "}
+                    <span className="text-gray-300">/</span> {listing.inquiries}{" "}
+                    enquir{listing.inquiries === 1 ? "y" : "ies"}
                   </p>
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-wrap gap-2">
-                {listing.status === "PUBLISHED" && listing.slug ? (
-                  <Link
-                    href={`/properties/${listing.slug}`}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                    View
-                  </Link>
-                ) : listing.status === "DRAFT" ? (
-                  <span className="inline-flex h-9 items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-500">
-                    Awaiting review
-                  </span>
-                ) : null}
-              </div>
+              <ListingActions
+                listingId={listing.id}
+                status={listing.status}
+                slug={listing.slug ?? listing.id}
+                isPublic={listing.status === "PUBLISHED"}
+              />
             </div>
           </article>
         ))}

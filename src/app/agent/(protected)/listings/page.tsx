@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, CheckCircle2, Clock3, Plus } from "lucide-react";
+import { Building2, CheckCircle2, Clock3, Eye, Plus } from "lucide-react";
 import { ListingList } from "./_components/listing-list";
 import type { AgentListing } from "./_components/listing-data";
 import prisma from "@/lib/prisma";
@@ -20,14 +20,19 @@ type PageProps = {
 
 export default async function AgentListingsPage({ searchParams }: PageProps) {
   const session = await requireAgent();
-  const created = (await searchParams).created === "1";
+  const params = await searchParams;
+  const created = params.created === "1";
+  const updated = params.updated === "1";
 
   // Listings are scoped to the signed-in agent — never to "the first user".
   const rawListings = await prisma.listing.findMany({
     where: {
       agentId: session?.user.id,
     },
-    include: { images: { orderBy: { order: "asc" } } },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      _count: { select: { inquiries: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -57,6 +62,10 @@ export default async function AgentListingsPage({ searchParams }: PageProps) {
       description: listing.description,
       amenities: (attrs?.amenities as string[]) ?? [],
       images: listing.images.map((img) => ({ url: img.url })),
+      views: listing.viewCount,
+      inquiries: listing._count.inquiries,
+      createdAt: listing.createdAt.getTime(),
+      priceValue: Number(listing.price),
     };
   });
 
@@ -64,6 +73,11 @@ export default async function AgentListingsPage({ searchParams }: PageProps) {
   const activeCount = rawListings.filter(
     (l) => l.status === "PUBLISHED",
   ).length;
+  const totalViews = rawListings.reduce((sum, l) => sum + l.viewCount, 0);
+  const totalInquiries = rawListings.reduce(
+    (sum, l) => sum + l._count.inquiries,
+    0,
+  );
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
@@ -101,7 +115,16 @@ export default async function AgentListingsPage({ searchParams }: PageProps) {
           </p>
         ) : null}
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-3">
+        {updated ? (
+          <p
+            role="status"
+            className="mt-6 rounded-card border border-success/30 bg-success/5 px-4 py-3 text-sm font-semibold text-forest-800"
+          >
+            Listing updated. Published listings reflect the change immediately.
+          </p>
+        ) : null}
+
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard
             icon={Building2}
             label="Total listings"
@@ -119,6 +142,12 @@ export default async function AgentListingsPage({ searchParams }: PageProps) {
             label="Pending approval"
             value={String(pendingCount)}
             detail="Awaiting review"
+          />
+          <SummaryCard
+            icon={Eye}
+            label="Views"
+            value={String(totalViews)}
+            detail={`${totalInquiries} enquir${totalInquiries === 1 ? "y" : "ies"} total`}
           />
         </section>
 

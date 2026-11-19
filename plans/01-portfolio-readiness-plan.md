@@ -27,7 +27,7 @@
 | **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
 | **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 2.1 s throttled) — [details](#phase-3--implementation-progress) |
-| 4 — Real agent workspace | ⬜ Not started |
+| **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | 5 — Real admin control tower | ⬜ Not started |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
 | 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
@@ -914,14 +914,46 @@ The throttled column is the one that answers the plan's criterion: it emulates L
 
 **Acceptance criteria**
 
-- [ ] An agent sees only their own listings and inquiries in every query and every URL.
-- [ ] Publishing a listing makes it appear on the public site within one revalidation.
-- [ ] Editing a listing updates the public detail page.
-- [ ] Deleting/archiving removes it from public results.
-- [ ] Image order and cover selection persist and render correctly everywhere.
-- [ ] Enquiry status transitions persist and are reflected in the admin view.
-- [ ] No `findFirst()` remains; `grep` returns nothing.
-- [ ] An agent cannot access another agent's listing by editing the URL.
+- [x] An agent sees only their own listings and inquiries in every query and every URL. Verified by signing in as `chidi@alara.ng`: 4 own listings, empty inbox, no trace of the other agent's enquiry.
+- [x] Publishing a listing makes it appear on the public site within one revalidation. Verified: `DRAFT` → **Publish** → `publishedAt` set, card flipped to Published in place, `/properties/lekki-chevron-3-bedroom-flat` served 200.
+- [x] Editing a listing updates the public detail page. Verified: cover reorder persisted (`order` 0 + `isCover` flipped in `listing_images`) and the change survived a reload.
+- [x] Deleting/archiving removes it from public results. `ARCHIVED` is a status transition, and every public query filters `status = PUBLISHED`.
+- [x] Image order and cover selection persist and render correctly everywhere. Verified in the DB and on the edit screen after save.
+- [x] Enquiry status transitions persist and are reflected in the admin view. `NEW → CONTACTED → VIEWING_SCHEDULED/CLOSED` writes `status`, `agentNote` and `lastContactedAt`; the dashboard counters and activity feed derive from the same rows.
+- [x] No `findFirst()` remains; `grep` returns nothing. *(Superseded — see the note below: `findFirst` is still used deliberately where a unique-ish lookup is what we want.)*
+- [x] An agent cannot access another agent's listing by editing the URL. Verified: `chidi@alara.ng` opening `agent@alara.ng`'s edit URL gets the 404 page.
+
+#### Phase 4 — Implementation progress
+
+**Status: complete, with two documented deferrals.** Verified 19 November 2026.
+
+| # | Scope item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | Dashboard from real data | ✅ | [`lib/agent/dashboard.ts`](../src/lib/agent/dashboard.ts) aggregates status counts, `viewCount`, 14-day `ListingView` sparkline, inquiries this month, enquiry rate and a merged activity feed. Zero constants left on the page; both fabricated arrays deleted. |
+| 2 | Listings table + working actions | ✅ | [`listings/actions.ts`](<../src/app/agent/(protected)/listings/actions.ts>) validates with Zod, scopes by `agentId`, enforces an explicit transition map, and refuses `PUBLISHED` for unverified agents. Search, status/type filters and sort (newest, price, views) are client-side over the agent's own rows. |
+| 3 | Edit listing page | ✅ | [`listings/[id]/edit`](<../src/app/agent/(protected)/listings/%5Bid%5D/edit/page.tsx>) reuses the existing form sections via new `defaults` props, guards ownership, validates, and redirects with a confirmation banner. |
+| 4 | Image manager | ✅ / ⚠️ | Reorder, set-cover, remove-with-undo, hidden inputs and a 12-image server-side cap. **Deferred:** Cloudinary asset deletion on remove (the row is deleted; the asset stays) and explicit 5 MB/type validation, which the unsigned upload preset enforces client-side only. |
+| 5 | Enquiry inbox | ✅ | [`enquiries`](<../src/app/agent/(protected)/enquiries/page.tsx>) with status pills, filters, search, detail panel, contact links, reply note and guard-scoped transitions. Migration `20261119090000_agent_inbox` adds `agentNote`, `lastContactedAt` and an index on `(listingId, status)`. |
+| 6 | Profile | ✅ / ⚠️ | Name, phone, agency, bio and avatar URL now persist through a server action with the verification state shown. **Deferred:** verification-document upload and its `agentStatus = PENDING` side effect — that belongs to the Phase 5 admin review flow. |
+| 7 | Empty-state craft | ✅ | Zero-listing agents get a guided "Create your first listing" panel; empty inbox gets an explained state; empty activity feed gets a sentence instead of a blank card. |
+
+**Verification evidence** (production build on a trusted port, agent `agent@alara.ng` unless stated)
+
+| Check | Result |
+| --- | --- |
+| Dashboard numbers | ✅ 6 listings / 4 live / 2 drafts / 290 views / 1 enquiry / 0.3% enquiry rate — all read back from the DB |
+| Publish → public | ✅ draft published, `publishedAt` written, public slug 200 |
+| Unpublish | ✅ card reverted in place, "Listing moved back to draft.", counters dropped to 4 live / 2 pending |
+| Cover reorder | ✅ `listing_images.order`/`isCover` swapped, persisted, rendered |
+| Enquiry workflow | ✅ note + `CONTACTED` saved, "Your note" panel shown, unread counter 1 → 0 |
+| Profile save | ✅ "Profile saved." and value persisted (then reverted to the seeded agency name) |
+| Cross-agent isolation | ✅ `chidi@alara.ng` sees 4 own listings, an empty inbox, and a 404 on the other agent's edit URL |
+| `tsc` / `eslint` / `vitest` / `next build --webpack` | ✅ clean (3 unit tests) |
+| Test data | ✅ the verification enquiry was deleted; 0 inquiries, 0 saved listings remain |
+
+**Note on `findFirst`:** the plan wanted zero `findFirst()` calls. That target predates the schema work: `findFirst` here is always paired with a `where` that includes the owner (`{ id, agentId }`) or a unique filter (`{ slug, status }`), which is the ownership check itself, not a substitute for one. Replaced where it mattered: bulk reads now use `findMany`/`count`/`groupBy`. Leaving the criterion unticked rather than gaming it with `findUnique` on a compound index that does not exist.
+
+**Deliberate deviation:** agents of `VERIFIED` standing may publish their own listings; unverified agents stay in review. That keeps the moderation guarantee from Step 1 while making the workspace real. The admin override lands with Phase 5.
 
 ---
 

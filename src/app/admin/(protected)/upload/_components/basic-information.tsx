@@ -1,13 +1,25 @@
 import { Input, Select, Textarea } from "@/components/ui/field";
 
+type BasicDefaults = {
+  title?: string;
+  price?: string;
+  type?: "HOUSE" | "LAND";
+  transactionType?: string;
+  negotiable?: boolean;
+  description?: string;
+};
+
 /**
  * `showStatus` is false for agent submissions: agents cannot choose a status,
- * they always enter moderation as drafts.
+ * they always enter moderation as drafts. `defaults` is what makes the same
+ * fields reusable on the edit screen.
  */
 export default function BasicInformation({
   showStatus = true,
+  defaults,
 }: {
   showStatus?: boolean;
+  defaults?: BasicDefaults;
 }) {
   return (
     <section className="space-y-4">
@@ -22,6 +34,7 @@ export default function BasicInformation({
           name="title"
           type="text"
           placeholder="Modern 4 bedroom duplex"
+          defaultValue={defaults?.title}
           required
         />
 
@@ -32,15 +45,20 @@ export default function BasicInformation({
           inputMode="numeric"
           min={0}
           placeholder="250000000"
+          defaultValue={defaults?.price}
           required
         />
 
-        <Select label="Listing type" name="type" defaultValue="HOUSE">
+        <Select label="Listing type" name="type" defaultValue={defaults?.type ?? "HOUSE"}>
           <option value="HOUSE">House</option>
           <option value="LAND">Land</option>
         </Select>
 
-        <Select label="Purpose" name="transactionType" defaultValue="sale">
+        <Select
+          label="Purpose"
+          name="transactionType"
+          defaultValue={defaults?.transactionType ?? "sale"}
+        >
           <option value="sale">Sale</option>
           <option value="rent">Rent</option>
           <option value="short-let">Short let</option>
@@ -62,6 +80,7 @@ export default function BasicInformation({
             <input
               name="negotiable"
               type="checkbox"
+              defaultChecked={defaults?.negotiable}
               className="h-4 w-4 rounded border-ink-900/20 text-forest-700"
             />
             Price is negotiable
@@ -73,6 +92,7 @@ export default function BasicInformation({
         label="Description"
         name="description"
         rows={4}
+        defaultValue={defaults?.description}
         placeholder="Describe the property, the neighbourhood, and what makes it worth a viewing."
         hint="Aim for 60–120 words. Buyers read this before they enquire."
       />
