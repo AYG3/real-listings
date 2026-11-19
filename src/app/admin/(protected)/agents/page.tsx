@@ -1,17 +1,24 @@
-import { requireAdmin } from "@/lib/auth/guards";
 import Link from "next/link";
-import { ArrowUpRight, Clock3, UserRound, Users } from "lucide-react";
-import { AgentList } from "./_components/agent-list";
-import { agents, pendingAgents } from "./_components/agent-data";
-import { SummaryCard } from "@/components/ui/card";
+import { ArrowUpRight, BadgeCheck, Clock3, Users } from "lucide-react";
+import { requireAdmin } from "@/lib/auth/guards";
+import { getVerificationQueue } from "@/lib/admin/moderation";
+import { VerificationList } from "../moderation/_components/verification-list";
 
-const activeAgentCount = agents.filter((agent) => agent.status === "active").length;
+const statusOrder = ["PENDING", "VERIFIED", "REJECTED", "SUSPENDED"];
 
 export default async function AgentsPage() {
   await requireAdmin();
+  const agents = await getVerificationQueue();
+
+  const counts = {
+    total: agents.length,
+    verified: agents.filter((agent) => agent.agentStatus === "VERIFIED").length,
+    pending: agents.filter((agent) => agent.agentStatus === "PENDING").length,
+  };
+
   return (
     <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
@@ -21,42 +28,59 @@ export default async function AgentsPage() {
               Agents
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500">
-              Review agent profiles, verification status, and listing activity.
+              Every agent account with its verification state and listing
+              activity. Verify or reject here — the decision is audited.
             </p>
           </div>
 
           <Link
-            href="/admin/agents/pending"
+            href="/admin/moderation?tab=agents"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-forest-700/20 bg-white px-4 text-sm font-bold text-forest-700 shadow-sm transition-colors hover:bg-emerald-50"
           >
-            Pending approvals
+            Moderation queue
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </header>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          <SummaryCard
-            icon={Users}
-            label="Total agents"
-            value={String(agents.length)}
-            detail="Across all markets"
-          />
-          <SummaryCard
-            icon={UserRound}
-            label="Active agents"
-            value={String(activeAgentCount)}
-            detail="Approved profiles"
-          />
-          <SummaryCard
-            icon={Clock3}
-            label="Pending review"
-            value={String(pendingAgents.length)}
-            detail="Awaiting approval"
-          />
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="flex items-center gap-2 text-sm font-semibold text-gray-500">
+              <Users className="h-4 w-4" aria-hidden="true" />
+              Total agents
+            </p>
+            <p className="mt-2 text-3xl font-bold text-gray-950">{counts.total}</p>
+          </div>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-5 shadow-sm">
+            <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
+              <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+              Verified
+            </p>
+            <p className="mt-2 text-3xl font-bold text-forest-700">{counts.verified}</p>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
+            <p className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+              <Clock3 className="h-4 w-4" aria-hidden="true" />
+              Pending review
+            </p>
+            <p className="mt-2 text-3xl font-bold text-amber-700">{counts.pending}</p>
+          </div>
         </section>
 
         <section className="mt-8">
-          <AgentList agents={agents} mode="all" />
+          {agents.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center text-sm font-medium text-gray-500">
+              No agent accounts yet.
+            </p>
+          ) : (
+            <VerificationList
+              agents={[...agents].sort(
+                (a, b) =>
+                  statusOrder.indexOf(a.agentStatus ?? "PENDING") -
+                    statusOrder.indexOf(b.agentStatus ?? "PENDING") ||
+                  a.name.localeCompare(b.name),
+              )}
+            />
+          )}
         </section>
       </div>
     </main>

@@ -64,16 +64,19 @@ model User {
   listings      Listing[]      @relation("AgentListings")
   inquiries     Inquiry[]      @relation("BuyerInquiries")
   savedListings SavedListing[]
+  auditEntries  AuditLog[]     @relation("AuditActor")
 
   image    String?
   sessions Session[]
   accounts Account[]
 
   // Agent verification and public profile
-  agentStatus AgentStatus? @default(PENDING)
-  agencyName  String?
-  bio         String?
-  verifiedAt  DateTime?
+  agentStatus       AgentStatus? @default(PENDING)
+  agencyName        String?
+  bio               String?
+  verifiedAt        DateTime?
+  agentStatusReason String?
+  agentReviewedAt   DateTime?
 
   @@map("users")
 }
@@ -197,6 +200,44 @@ model SavedListing {
 
   @@unique([userId, listingId])
   @@map("saved_listings")
+}
+
+enum AuditAction {
+  LISTING_APPROVED
+  LISTING_REJECTED
+  LISTING_CHANGES_REQUESTED
+  LISTING_PUBLISHED
+  LISTING_UNPUBLISHED
+  LISTING_ARCHIVED
+  AGENT_VERIFIED
+  AGENT_REJECTED
+  ROLE_CHANGED
+}
+
+/// One row per administrative decision. Written by the same server action that
+/// performs the change, so the log cannot drift from the state it describes.
+model AuditLog {
+  id String @id @default(cuid())
+
+  actorId   String
+  actor     User   @relation("AuditActor", fields: [actorId], references: [id])
+  actorName String
+
+  action AuditAction
+
+  targetType String
+  targetId   String
+  targetName String
+
+  fromStatus String?
+  toStatus   String?
+  note       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
 }
 
 model Session {

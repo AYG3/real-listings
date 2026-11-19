@@ -66,6 +66,7 @@ export default async function AgentListingsPage({ searchParams }: PageProps) {
       inquiries: listing._count.inquiries,
       createdAt: listing.createdAt.getTime(),
       priceValue: Number(listing.price),
+      reviewNote: listing.rejectionReason,
     };
   });
 

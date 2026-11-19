@@ -204,6 +204,13 @@ export function ListingList({ listings }: ListingListProps) {
                     <span className="text-gray-300">/</span> {listing.inquiries}{" "}
                     enquir{listing.inquiries === 1 ? "y" : "ies"}
                   </p>
+
+                  {listing.reviewNote ? (
+                    <p className="mt-2 rounded border-l-2 border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                      <span className="font-bold">Admin feedback:</span>{" "}
+                      {listing.reviewNote}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 

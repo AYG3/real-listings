@@ -28,7 +28,7 @@
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
 | **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
-| 5 — Real admin control tower | ⬜ Not started |
+| **5 — Real admin control tower** | ✅ **Complete** (users/role table + confirm dialogs deferred) — [details](#phase-5--implementation-progress) |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
 | 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
 | 8 — Portfolio packaging & launch | ⬜ Not started |
@@ -984,12 +984,44 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 
 **Acceptance criteria**
 
-- [ ] Every number on `/admin/overview` traces to a Prisma aggregate (reviewer can cross-check).
-- [ ] Approving a listing publishes it and it appears publicly; rejecting it notifies the agent with a reason.
-- [ ] Verifying an agent changes their public badge.
-- [ ] Every state transition writes an `AuditLog` row and appears in `/admin/audit`.
-- [ ] Pending pages read the database; `agent-data.ts` and `listing-data.ts` fixtures are deleted.
-- [ ] Destructive actions require confirmation and are impossible for demo users.
+- [x] Every number on `/admin/overview` traces to a Prisma aggregate (reviewer can cross-check).
+- [x] Approving a listing publishes it and it appears publicly; rejecting it notifies the agent with a reason.
+- [x] Verifying an agent changes their public badge.
+- [x] Every state transition writes an `AuditLog` row and appears in `/admin/audit`.
+- [x] Pending pages read the database; `agent-data.ts` and `listing-data.ts` fixtures are deleted.
+- [ ] Destructive actions require confirmation and are impossible for demo users. **Open:** reject/verify ask for a reason (a soft confirm) but there is no type-to-confirm dialog, and demo-user read-only mode is Phase 6 work.
+
+#### Phase 5 — Implementation progress
+
+**Status: complete except the confirmation/demo-guard criterion.** Verified 19 November 2026.
+
+| # | Scope item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | Overview from real data | ✅ | [`lib/admin/moderation.ts`](../src/lib/admin/moderation.ts) aggregates listing status counts, agent status counts, buyers, enquiries this week, the 30-day created chart and recent audit rows. The old hardcoded stat array is gone. |
+| 2 | Moderation queue | ✅ | [`/admin/moderation`](<../src/app/admin/(protected)/moderation/page.tsx>): real `DRAFT` listings with cover, agent, age, prior feedback. **Approve** sets `PUBLISHED` + `publishedAt`; **Reject** and **Request changes** require a reason, which is stored on `rejectionReason` and rendered on the agent's listing card. |
+| 3 | Agent verification queue | ✅ | Same page, agents tab: real agent accounts sorted with PENDING first. **Verify** sets `agentStatus = VERIFIED` + `verifiedAt`; **Reject** requires a reason stored in `agentStatusReason`. The public profile already renders the verified badge from that column. |
+| 4 | Listing detail admin view | ✅ / ⚠️ | The existing `/admin/listings/[id]` record view remains read-only; approve/reject/archive run from the queue. Archive/unarchive on the detail page is not wired — status changes live in one place by design, and the agent can archive their own. |
+| 5 | Users table + role changes | ⬜ deferred | Not built. `AuditAction.ROLE_CHANGED` exists so the enum does not need a migration later. |
+| 6 | Audit log page | ✅ | [`/admin/audit`](<../src/app/admin/(protected)/audit/page.tsx>) lists actor, action, target, `from → to` and the reason, newest first. `recordAudit` is called by the same action that mutates state, so the log cannot drift. |
+| 7 | Admin upload | ✅ | Kept, and it already shares the agent form components and assigns the admin as the listing's agent — the condition the plan set for keeping it. |
+
+**Verification evidence** (production build on a trusted port, `admin@alara.ng`)
+
+| Check | Result |
+| --- | --- |
+| Overview numbers | ✅ 29 listings (18 live) / 11 drafts / 4 agents (0 pending, 4 verified) / 4 buyers — all cross-checked against the DB |
+| 30-day chart | ✅ "8 listings created in the last 30 days · peak 1/day" from `listing.createdAt` |
+| Request changes | ✅ reason required; card shows "Changes requested" + previous feedback; `rejectionReason` written |
+| Agent sees feedback | ✅ signed in as `agent@alara.ng`, the draft card shows "Admin feedback: Please add the survey plan number and a clearer title photo." |
+| Approve → public | ✅ approved listing served at `/properties/lekki-chevron-3-bedroom-flat` with its `<h1>` and price immediately (cache cleared by the action) |
+| Verify agent | ✅ staged `grace@alara.ng` as PENDING, verified through the UI, queue dropped to 0, `agentStatus` = VERIFIED |
+| Audit rows | ✅ `LISTING_CHANGES_REQUESTED (DRAFT→DRAFT)`, `LISTING_APPROVED (DRAFT→PUBLISHED)`, `AGENT_VERIFIED (PENDING→VERIFIED)` all rendered with actor and note |
+| Fixtures deleted | ✅ `admin/agents/_components/*` removed, `listing-data.ts` reduced to types |
+| `tsc` / `eslint` / `vitest` / `next build` | ✅ clean |
+
+**Test data restored after verification:** the approved listing was returned to `DRAFT`, the requested-changes note cleared, `grace@alara.ng` left VERIFIED (her seeded state), and the three verification audit rows deleted by id so the demo starts with an empty log and 18 published / 11 drafts listing split.
+
+**Note on `/admin/listings/pending` and `/admin/agents/pending`:** both now redirect to the moderation queue. The URLs stay alive for bookmarks; the fixture pages they used to be are gone.
 
 ---
 

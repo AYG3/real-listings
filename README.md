@@ -4,7 +4,7 @@ A three-sided property marketplace for Nigeria: buyers discover verified houses 
 
 Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudinary.
 
-> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery, the enquiry/save loop and the real agent workspace (Phases 0–4) are complete; the admin control tower is next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
+> **Status:** actively being built toward a portfolio-ready release. Foundation, design system, public discovery, the enquiry/save loop, the agent workspace and the admin control tower (Phases 0–5) are complete; demo mode and the test suite are next. See [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) for the phased roadmap.
 
 ## Stack
 
@@ -38,15 +38,19 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 - **Agent profile** editing (name, phone, agency, bio, avatar) with the verification state shown.
 - Agent listing creation with Cloudinary image upload, ordered images and a cover image. New submissions from unverified agents enter moderation as drafts.
 - Admin listing table with search, status filters, and a listing detail view.
+- **Admin control tower** at `/admin/overview`: real listing/agent/buyer/enquiry counts, a 30-day submissions chart and the latest decisions from the audit log.
+- **Moderation queue** at `/admin/moderation`: approve a draft to publish it, or reject / request changes with a reason that lands on the agent's listing card.
+- **Agent verification** in the same queue: verify or reject an account; the verified badge on the public profile reads the same column.
+- **Audit log** at `/admin/audit`: who changed what, from which state to which, with the reason attached.
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
 - `sitemap.xml` and `robots.txt` generated from the live catalogue.
 
 ## In progress
 
-- Admin moderation from real data (Phase 5), including the agent verification queue and audit log.
+- Admin user table with role changes, and confirm-to-type dialogs for destructive actions.
 - Buyer `/account` pages for saved listings and enquiries.
 - One-click, read-only demo mode for reviewers (Phase 6).
-- Automated tests (Phase 7); CI already runs lint, typecheck and build.
+- Automated tests (Phase 7) — 6 unit tests exist (`npm test`); CI runs lint, typecheck, tests and build.
 
 ## Getting started
 

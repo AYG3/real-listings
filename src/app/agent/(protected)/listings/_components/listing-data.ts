@@ -33,4 +33,6 @@ export type AgentListing = {
   createdAt: number;
   /** Raw price in the listing currency, for client-side sorting. */
   priceValue: number;
+  /** Feedback left by an admin on the last review, if any. */
+  reviewNote: string | null;
 };

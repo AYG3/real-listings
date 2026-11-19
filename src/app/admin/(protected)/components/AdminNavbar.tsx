@@ -8,9 +8,11 @@ import { initials } from "@/lib/format";
 import {
   LayoutDashboard,
   Building2,
-  Users,
-  Upload,
+  ListChecks,
   Menu,
+  ScrollText,
+  Upload,
+  Users,
   X,
 } from "lucide-react";
 
@@ -18,6 +20,8 @@ const navItems = [
   { label: "Overview", href: "/admin/overview", icon: LayoutDashboard },
   { label: "Listings", href: "/admin/listings", icon: Building2 },
   { label: "Agents", href: "/admin/agents", icon: Users },
+  { label: "Moderation", href: "/admin/moderation", icon: ListChecks },
+  { label: "Audit log", href: "/admin/audit", icon: ScrollText },
   { label: "Upload", href: "/admin/upload", icon: Upload },
 ];
 
