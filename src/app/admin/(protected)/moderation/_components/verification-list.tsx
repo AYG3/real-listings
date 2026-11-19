@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { BadgeCheck, ShieldX } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { decideAgent } from "../actions";
 import type { VerificationAgent } from "@/lib/admin/moderation";
 
@@ -25,6 +26,9 @@ export function VerificationList({ agents }: { agents: VerificationAgent[] }) {
   const [reasonFor, setReasonFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [feedback, setFeedback] = useState<{ tone: "error" | "success"; text: string } | null>(
+    null,
+  );
+  const [confirming, setConfirming] = useState<{ agentId: string; name: string } | null>(
     null,
   );
 
@@ -121,7 +125,7 @@ export function VerificationList({ agents }: { agents: VerificationAgent[] }) {
                 <button
                   type="button"
                   disabled={pending}
-                  onClick={() => act(agent.id, "REJECTED")}
+                  onClick={() => setConfirming({ agentId: agent.id, name: agent.name })}
                   className="inline-flex h-9 items-center gap-1.5 rounded-md border border-rose-300 bg-white px-3 text-xs font-bold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
                 >
                   <ShieldX className="h-3.5 w-3.5" aria-hidden="true" />
@@ -132,6 +136,21 @@ export function VerificationList({ agents }: { agents: VerificationAgent[] }) {
           </div>
         </article>
       ))}
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title={`Reject ${confirming?.name ?? "this agent"}?`}
+        description="Their listings stop being publishable and the reason is shown to them. The decision is written to the audit log."
+        phrase="REJECT"
+        confirmLabel="Reject agent"
+        pending={pending}
+        onConfirm={() => {
+          const target = confirming;
+          setConfirming(null);
+          if (target) act(target.agentId, "REJECTED");
+        }}
+        onCancel={() => setConfirming(null)}
+      />
     </div>
   );
 }

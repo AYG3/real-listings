@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Check, ExternalLink, MessageSquareWarning, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { decideListing } from "../actions";
 import type { ModerationListing } from "@/lib/admin/moderation";
 
@@ -28,6 +29,7 @@ export function ModerationQueue({ listings }: { listings: ModerationListing[] })
     null,
   );
   const [decided, setDecided] = useState<Record<string, string>>({});
+  const [confirming, setConfirming] = useState<{ listingId: string } | null>(null);
 
   const act = (
     listingId: string,
@@ -181,7 +183,7 @@ export function ModerationQueue({ listings }: { listings: ModerationListing[] })
                       <button
                         type="button"
                         disabled={pending}
-                        onClick={() => act(listing.id, "REJECTED")}
+                        onClick={() => setConfirming({ listingId: listing.id })}
                         className="inline-flex h-9 items-center gap-1.5 rounded-md border border-rose-300 bg-white px-3 text-xs font-bold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
                       >
                         <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -202,6 +204,21 @@ export function ModerationQueue({ listings }: { listings: ModerationListing[] })
           </article>
         );
       })}
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title="Reject this listing?"
+        description="The agent keeps the record but it cannot be submitted again without changes. The reason you typed above is attached to the decision."
+        phrase="REJECT"
+        confirmLabel="Reject listing"
+        pending={pending}
+        onConfirm={() => {
+          const target = confirming;
+          setConfirming(null);
+          if (target) act(target.listingId, "REJECTED");
+        }}
+        onCancel={() => setConfirming(null)}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   Menu,
   ScrollText,
   Upload,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Overview", href: "/admin/overview", icon: LayoutDashboard },
   { label: "Listings", href: "/admin/listings", icon: Building2 },
   { label: "Agents", href: "/admin/agents", icon: Users },
+  { label: "Users", href: "/admin/users", icon: UserCog },
   { label: "Moderation", href: "/admin/moderation", icon: ListChecks },
   { label: "Audit log", href: "/admin/audit", icon: ScrollText },
   { label: "Upload", href: "/admin/upload", icon: Upload },

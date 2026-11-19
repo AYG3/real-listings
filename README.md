@@ -42,12 +42,13 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 - **Moderation queue** at `/admin/moderation`: approve a draft to publish it, or reject / request changes with a reason that lands on the agent's listing card.
 - **Agent verification** in the same queue: verify or reject an account; the verified badge on the public profile reads the same column.
 - **Audit log** at `/admin/audit`: who changed what, from which state to which, with the reason attached.
+- **Users table** at `/admin/users`: roles, agent status, join date and activity per account, with an audited role change.
+- **Type-to-confirm** dialogs on destructive actions (archive, reject listing, reject agent, change role), plus a read-only guard for demo accounts (`DEMO_MODE`).
 - A single design system: one brand source (`src/lib/brand.ts`), one token palette (`globals.css`), and shared primitives in `src/components/ui/`.
 - `sitemap.xml` and `robots.txt` generated from the live catalogue.
 
 ## In progress
 
-- Admin user table with role changes, and confirm-to-type dialogs for destructive actions.
 - Buyer `/account` pages for saved listings and enquiries.
 - One-click, read-only demo mode for reviewers (Phase 6).
 - Automated tests (Phase 7) — 6 unit tests exist (`npm test`); CI runs lint, typecheck, tests and build.

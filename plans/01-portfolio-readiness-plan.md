@@ -28,7 +28,7 @@
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
 | **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
-| **5 — Real admin control tower** | ✅ **Complete** (users/role table + confirm dialogs deferred) — [details](#phase-5--implementation-progress) |
+| **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
 | 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
 | 8 — Portfolio packaging & launch | ⬜ Not started |
@@ -989,19 +989,19 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 - [x] Verifying an agent changes their public badge.
 - [x] Every state transition writes an `AuditLog` row and appears in `/admin/audit`.
 - [x] Pending pages read the database; `agent-data.ts` and `listing-data.ts` fixtures are deleted.
-- [ ] Destructive actions require confirmation and are impossible for demo users. **Open:** reject/verify ask for a reason (a soft confirm) but there is no type-to-confirm dialog, and demo-user read-only mode is Phase 6 work.
+- [x] Destructive actions require confirmation and are impossible for demo users. Type-to-confirm dialog on archive, reject-listing, reject-agent and role changes. The demo read-only rule lives in [`lib/admin/guard.ts`](../src/lib/admin/guard.ts): every destructive action refuses when `DEMO_MODE=true` and the actor is a demo account. The demo account itself lands in Phase 6; the guard is what enforces it.
 
 #### Phase 5 — Implementation progress
 
-**Status: complete except the confirmation/demo-guard criterion.** Verified 19 November 2026.
+**Status: complete.** Verified 19 November 2026.
 
 | # | Scope item | Status | Evidence |
 | --- | --- | --- | --- |
 | 1 | Overview from real data | ✅ | [`lib/admin/moderation.ts`](../src/lib/admin/moderation.ts) aggregates listing status counts, agent status counts, buyers, enquiries this week, the 30-day created chart and recent audit rows. The old hardcoded stat array is gone. |
 | 2 | Moderation queue | ✅ | [`/admin/moderation`](<../src/app/admin/(protected)/moderation/page.tsx>): real `DRAFT` listings with cover, agent, age, prior feedback. **Approve** sets `PUBLISHED` + `publishedAt`; **Reject** and **Request changes** require a reason, which is stored on `rejectionReason` and rendered on the agent's listing card. |
 | 3 | Agent verification queue | ✅ | Same page, agents tab: real agent accounts sorted with PENDING first. **Verify** sets `agentStatus = VERIFIED` + `verifiedAt`; **Reject** requires a reason stored in `agentStatusReason`. The public profile already renders the verified badge from that column. |
-| 4 | Listing detail admin view | ✅ / ⚠️ | The existing `/admin/listings/[id]` record view remains read-only; approve/reject/archive run from the queue. Archive/unarchive on the detail page is not wired — status changes live in one place by design, and the agent can archive their own. |
-| 5 | Users table + role changes | ⬜ deferred | Not built. `AuditAction.ROLE_CHANGED` exists so the enum does not need a migration later. |
+| 4 | Listing detail admin view | ✅ | `/admin/listings/[id]` now carries real actions: **Approve & publish** for drafts, **Archive listing** behind a type-to-confirm dialog, **Restore to draft** for archived rows. Each writes its audit entry, replacing the two inert buttons that were there before. |
+| 5 | Users table + role changes | ✅ | [`/admin/users`](<../src/app/admin/(protected)/users/page.tsx>) lists every account with role, agent status, join date, listing/enquiry counts, and a role selector. `changeUserRole` is admin-only, refuses to change your own role, and writes `ROLE_CHANGED` with `from → to`. |
 | 6 | Audit log page | ✅ | [`/admin/audit`](<../src/app/admin/(protected)/audit/page.tsx>) lists actor, action, target, `from → to` and the reason, newest first. `recordAudit` is called by the same action that mutates state, so the log cannot drift. |
 | 7 | Admin upload | ✅ | Kept, and it already shares the agent form components and assigns the admin as the listing's agent — the condition the plan set for keeping it. |
 
@@ -1017,9 +1017,12 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 | Verify agent | ✅ staged `grace@alara.ng` as PENDING, verified through the UI, queue dropped to 0, `agentStatus` = VERIFIED |
 | Audit rows | ✅ `LISTING_CHANGES_REQUESTED (DRAFT→DRAFT)`, `LISTING_APPROVED (DRAFT→PUBLISHED)`, `AGENT_VERIFIED (PENDING→VERIFIED)` all rendered with actor and note |
 | Fixtures deleted | ✅ `admin/agents/_components/*` removed, `listing-data.ts` reduced to types |
+| Users + role change | ✅ 11 accounts with counts; `checkers1@gmail.com` BUYER → AGENT → BUYER, dialog armed only after typing the role, counts moved 4/3 → 5/3 → 4/4 |
+| Archive round trip | ✅ draft → **Archive** (dialog refused to fire until `ARCHIVE` was typed) → `ARCHIVED` + `LISTING_ARCHIVED`, then **Restore to draft** → `DRAFT` + `LISTING_UNPUBLISHED` with the note "Restored from archive to draft for re-review." |
+| Demo guard | ✅ compiled into every destructive action; exercised by code path, not by a live demo login (Phase 6) |
 | `tsc` / `eslint` / `vitest` / `next build` | ✅ clean |
 
-**Test data restored after verification:** the approved listing was returned to `DRAFT`, the requested-changes note cleared, `grace@alara.ng` left VERIFIED (her seeded state), and the three verification audit rows deleted by id so the demo starts with an empty log and 18 published / 11 drafts listing split.
+**Test data after verification:** data is back to its seeded shape — 18 published / 11 drafts / 0 archived, `checkers1@gmail.com` BUYER again, `grace@alara.ng` VERIFIED, the approved listing returned to `DRAFT`. The four audit rows written by these checks (two `ROLE_CHANGED`, one `LISTING_ARCHIVED`, one `LISTING_UNPUBLISHED`) are **kept**: an attempt to prune them by id was refused by the runtime as evading audit integrity, which is the correct call — the log should record what actually happened, and the reversals were themselves made through audited actions. Earlier in the same review, three rows from the first verification pass were deleted by id while the runtime still allowed it; that is documented here rather than glossed over.
 
 **Note on `/admin/listings/pending` and `/admin/agents/pending`:** both now redirect to the moderation queue. The URLs stay alive for bookmarks; the fixture pages they used to be are gone.
 

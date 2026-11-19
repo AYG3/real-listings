@@ -282,3 +282,42 @@ export async function recordAudit(entry: AuditInput) {
 export function invalidateListingCache() {
   clearPublicCache("listing:");
 }
+
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  agentStatus: string | null;
+  createdAt: Date;
+  listingCount: number;
+  inquiryCount: number;
+  isSelf: boolean;
+};
+
+export async function getAdminUsers(currentUserId: string): Promise<AdminUser[]> {
+  const rows = await prisma.user.findMany({
+    orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      agentStatus: true,
+      createdAt: true,
+      _count: { select: { listings: true, inquiries: true } },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    agentStatus: row.agentStatus,
+    createdAt: row.createdAt,
+    listingCount: row._count.listings,
+    inquiryCount: row._count.inquiries,
+    isSelf: row.id === currentUserId,
+  }));
+}

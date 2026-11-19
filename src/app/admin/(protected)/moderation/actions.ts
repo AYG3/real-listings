@@ -8,6 +8,7 @@ import {
   invalidateListingCache,
   recordAudit,
 } from "@/lib/admin/moderation";
+import { DEMO_BLOCKED_MESSAGE, isDemoUser } from "@/lib/admin/guard";
 
 export type DecisionResult = { status: "success" | "error"; message: string };
 
@@ -49,6 +50,10 @@ export async function decideListing(
   }
 
   const session = await requireAdmin();
+
+  if (isDemoUser(session.user)) {
+    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  }
 
   const listing = await prisma.listing.findUnique({
     where: { id: parsed.data.listingId },
@@ -125,6 +130,10 @@ export async function decideAgent(
 
   const session = await requireAdmin();
 
+  if (isDemoUser(session.user)) {
+    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  }
+
   const agent = await prisma.user.findUnique({
     where: { id: parsed.data.agentId },
     select: { id: true, name: true, role: true, agentStatus: true },
@@ -174,4 +183,150 @@ export async function decideAgent(
         ? `${agent.name} is verified and can publish.`
         : `${agent.name} was rejected.`,
   };
+}
+
+const roleSchema = z.object({
+  userId: z.string().min(1),
+  role: z.enum(["BUYER", "AGENT", "ADMIN"]),
+});
+
+/**
+ * Role changes are the most dangerous admin action here, so they are guarded
+ * three ways: admin-only, never against your own account, and always audited
+ * with the previous role.
+ */
+export async function changeUserRole(
+  userId: string,
+  role: string,
+): Promise<DecisionResult> {
+  const parsed = roleSchema.safeParse({ userId, role });
+
+  if (!parsed.success) {
+    return { status: "error", message: "That role is not valid." };
+  }
+
+  const session = await requireAdmin();
+
+  if (isDemoUser(session.user)) {
+    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  }
+
+  if (session.user.id === parsed.data.userId) {
+    return {
+      status: "error",
+      message: "You cannot change your own role. Ask another admin.",
+    };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: parsed.data.userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  if (!target) {
+    return { status: "error", message: "User not found." };
+  }
+
+  const label = target.name?.trim() || target.email;
+
+  if (target.role === parsed.data.role) {
+    return { status: "error", message: `${label} already has that role.` };
+  }
+
+  await prisma.user.update({
+    where: { id: target.id },
+    data: { role: parsed.data.role },
+  });
+
+  await recordAudit({
+    actorId: session.user.id,
+    actorName: session.user.name ?? session.user.email,
+    action: "ROLE_CHANGED",
+    targetType: "user",
+    targetId: target.id,
+    targetName: label,
+    fromStatus: target.role,
+    toStatus: parsed.data.role,
+  });
+
+  revalidatePublicSurfaces();
+  revalidatePath("/admin/users");
+
+  return {
+    status: "success",
+    message: `${label} is now ${parsed.data.role.toLowerCase()}.`,
+  };
+}
+
+const listingIdSchema = z.object({ listingId: z.string().min(1) });
+
+async function setArchived(
+  listingId: string,
+  archive: boolean,
+): Promise<DecisionResult> {
+  const parsed = listingIdSchema.safeParse({ listingId });
+
+  if (!parsed.success) {
+    return { status: "error", message: "That listing is not valid." };
+  }
+
+  const session = await requireAdmin();
+
+  if (isDemoUser(session.user)) {
+    return { status: "error", message: DEMO_BLOCKED_MESSAGE };
+  }
+
+  const listing = await prisma.listing.findUnique({
+    where: { id: parsed.data.listingId },
+    select: { id: true, slug: true, title: true, status: true },
+  });
+
+  if (!listing) {
+    return { status: "error", message: "Listing not found." };
+  }
+
+  const nextStatus = archive ? "ARCHIVED" : "DRAFT";
+
+  if (listing.status === nextStatus) {
+    return {
+      status: "error",
+      message: archive ? "That listing is already archived." : "That listing is not archived.",
+    };
+  }
+
+  await prisma.listing.update({
+    where: { id: listing.id },
+    data: { status: nextStatus, publishedAt: null },
+  });
+
+  await recordAudit({
+    actorId: session.user.id,
+    actorName: session.user.name ?? session.user.email,
+    action: archive ? "LISTING_ARCHIVED" : "LISTING_UNPUBLISHED",
+    targetType: "listing",
+    targetId: listing.id,
+    targetName: listing.title,
+    fromStatus: listing.status,
+    toStatus: nextStatus,
+    note: archive ? null : "Restored from archive to draft for re-review.",
+  });
+
+  revalidatePublicSurfaces();
+  revalidatePath(`/properties/${listing.slug}`);
+  revalidatePath(`/admin/listings/${listing.id}`);
+
+  return {
+    status: "success",
+    message: archive
+      ? `"${listing.title}" archived and removed from public results.`
+      : `"${listing.title}" restored to draft.`,
+  };
+}
+
+export async function archiveListing(listingId: string) {
+  return setArchived(listingId, true);
+}
+
+export async function restoreListing(listingId: string) {
+  return setArchived(listingId, false);
 }

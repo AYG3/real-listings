@@ -6,8 +6,6 @@ import {
   Bath,
   BedDouble,
   Building2,
-  Check,
-  Flag,
   Home,
   MapPin,
   Ruler,
@@ -17,6 +15,7 @@ import prisma from "@/lib/prisma";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusPill } from "@/components/ui/badge";
 import ImageGallery from "./image-gallery";
+import { ListingAdminControls } from "./listing-admin-controls";
 
 type ListingDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -118,18 +117,11 @@ export default async function ListingDetailsPage({
                 <Spec icon={Home} label="Type" value={listing.type} />
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                {listing.status === "DRAFT" ? (
-                  <button className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-forest-700 px-5 text-sm font-bold text-white transition-colors hover:bg-forest-800">
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                    Publish listing
-                  </button>
-                ) : null}
-                <button className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-rose-200 bg-white px-5 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-50">
-                  <Flag className="h-4 w-4" aria-hidden="true" />
-                  Flag listing
-                </button>
-              </div>
+              <ListingAdminControls
+                listingId={listing.id}
+                status={listing.status}
+                title={listing.title}
+              />
             </div>
           </div>
         </section>
