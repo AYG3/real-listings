@@ -1198,20 +1198,45 @@ This does **not** close the Phase 3 LCP criterion, which is defined against Ligh
 | 1 | README as the pitch | ✅ | Rewritten: pitch → runnable block → "explore as" → problem in four lines → stack table with the *reason* for each choice → Mermaid architecture → personas → feature list → three decisions with what was given up → metrics with the measurement method → screenshots → setup → scripts → security → deployment → roadmap. |
 | 2 | Architecture diagram | ✅ | Inline Mermaid in the README (renders on GitHub, no image to go stale), plus the deeper [architecture](../docs/architecture.md) and [authorization](../docs/authorization.md) docs. |
 | 3 | Metrics table with real numbers | ✅ | 91 tests, 0 ESLint warnings, 0 `any`, LCP 1 584 ms median with the profile named, 1 053 KB payload. Lighthouse is explicitly *not* claimed; the method is printed beside each number. |
-| 4 | Screenshots | ✅ | Captured from the production build through headless Chrome over CDP at 1440 × 900 (the integrated browser panel is ~890 px wide, which produced tablet-width crops on the first attempt). |
+| 4 | Screenshots | ✅ | Captured from the production build through headless Chrome over CDP at 1440 × 900 (the integrated browser panel is ~890 px wide, which produced tablet-width crops on the first attempt). Re-shot after the data cleanup so the queue shows real listings. |
 | 5 | Social preview | ✅ | The app's own `opengraph-image` route renders a 1200 × 630 card; exported to [`docs/social/og-1200x630.png`](../docs/social/og-1200x630.png) for the repo settings, with the description, topics and post copy in [`docs/social/launch-post.md`](../docs/social/launch-post.md). Uploading it is a repo-settings step. |
 | 6 | Repo polish | ⚠️ | `LICENSE` (MIT), `CONTRIBUTING.md`, `docs/case-study.md` added; tag `v1.0.0-portfolio` created locally. Description, topics and a published release need `gh` auth. |
 | 7 | Friendly 404 | ✅ | [`not-found.tsx`](../src/app/not-found.tsx): verified over HTTP — an unknown path returns **404** with "This page does not exist", a removed-from-market explanation and two ways back. |
 | 8 | STAR case study | ✅ | [`docs/case-study.md`](../docs/case-study.md) — situation, task, action, result, plus four CV bullets drawn from the measured numbers. |
 | 9 | Custom domain | ◻️ | Blocked with deployment. |
 
-**Known data-hygiene item (not fixed, deliberately):** the moderation queue still contains nine
-draft listings created by hand in August 2026 under `checkers@gmail.com` (titles such as "s",
-"121", "Jermain section blending", prices ₦12 and ₦1,142, and one place literally called
-"City unavailable"). They are the project owner's own test data, so they were left alone rather
-than deleted during packaging. They appear in `docs/screenshots/admin-moderation.jpg`. Archiving
-them through `/admin/listings/<id>` (the archive control is reversible and audited) or deleting
-them outright is a one-sitting cleanup for the owner.
+**Data hygiene — resolved 19 November 2026.** Eleven rows created by hand during early
+development carried test values: a ₦12 listing titled "s", a row with twelve bathrooms and the
+city "Lent" in the state "Populatior", a plot sized "901002", two Canadian addresses in a
+Nigeria-only marketplace, and — the ones that actually mattered — **two of them were published**,
+so "Land" and "3 bedroom Storey buildings" (₦600,000,000 for 3 bedrooms) were sitting in the
+public catalogue and in the homepage's published count.
+
+They were rewritten in place rather than deleted: deleting another owner's rows is not a
+packaging decision, and the moderation queue reads better with plausible pending work in it.
+Every row now has a real Nigerian address, a market price consistent with its size and type, a
+description that says something, and attributes that match the property type.
+
+| Before | After |
+| --- | --- |
+| "s" · ₦12 · Port Harcourt | 2-bedroom flat in Diobu, Port Harcourt · ₦11,500,000 |
+| "121" · ₦1,142 · 12 bathrooms · "City unavailable" | 3-bedroom flat in Rumuola, Port Harcourt · ₦14,000,000 |
+| "Modern 4 bedroom" · ₦12,800,000 | 4-bedroom flat in Rumuomasi, Port Harcourt · ₦22,500,000 |
+| "Modern 4 bedroom duplex" · ₦12,900,000 | 4-bedroom duplex in GRA Phase 2 · ₦48,000,000 |
+| "Red Marrier Bungalo" · ₦1,200,000 | 3-bedroom bungalow in Rumuokoro · ₦16,500,000 |
+| "Modern House" · ₦12,000,000 · "Silicon Valley" | 2-bedroom flat in Woji, Port Harcourt · ₦9,800,000 |
+| "Jermain section blending" · ₦6,000,000 · Lent/Populatior | 3-bedroom bungalow in Ikorodu, Lagos · ₦28,000,000 |
+| "Kings Mansion" · ₦200,000,000 · Vancouver, Canada | 5-bedroom detached mansion in Asokoro, Abuja · ₦420,000,000 |
+| "Kings and Queens Complex" · ₦54,000,000 · Edmonton, Canada | 4-bedroom terrace in Chevron Drive, Lekki · ₦98,000,000 |
+| **"3 bedroom Storey buildings" · ₦600,000,000 · Muncipal/ABUJA FCT** (published) | 3-bedroom storey building in Garki, Abuja · ₦165,000,000 |
+| **"Land" · ₦40,000,000 · Daki biyu/ABUJA FCT** (published) | Half plot of land in Daki Biyu, Abuja · ₦32,000,000 · C of O · survey available |
+
+Outlier check after the rewrite (`price < ₦1m`, titles under ten characters, "unavailable"-style
+locations, six-digit plot sizes): **0 of 31 rows**. The repair is scripted and idempotent in
+[`scripts/cleanup-listings.ts`](../scripts/cleanup-listings.ts) so it can be re-run against any
+environment seeded from the same dev database. The two published slugs moved to
+`/properties/abuja-garki-3-bedroom-storey-building` and
+`/properties/abuja-daki-biyu-half-plot-of-land`; the old ones now render the 404 content.
 
 ---
 
