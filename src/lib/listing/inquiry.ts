@@ -1,38 +1,7 @@
-import { z } from "zod";
-
-const trimmed = (value: unknown) =>
-  typeof value === "string" ? value.trim() : value;
-
-export const enquirySchema = z.object({
-  listingId: z.string().min(1),
-  name: z
-    .preprocess(trimmed, z.string().min(2, "Please enter your name.").max(80)),
-  email: z.preprocess(
-    trimmed,
-    z.email("Enter a valid email address.").max(160),
-  ),
-  phone: z.preprocess(
-    trimmed,
-    z
-      .string()
-      .max(24)
-      .refine(
-        (value) => value === "" || /^[+0-9][0-9 ()-]{6,23}$/.test(value),
-        "Enter a valid phone number, or leave it blank.",
-      ),
-  ),
-  message: z.preprocess(
-    trimmed,
-    z
-      .string()
-      .min(20, "Tell the agent a little more — at least 20 characters.")
-      .max(2_000),
-  ),
-  // Honeypot: real users never see or fill this field.
-  website: z.string().max(0).optional(),
-});
-
-export type EnquiryInput = z.infer<typeof enquirySchema>;
+/**
+ * Server-side spam controls for the enquiry form. The field rules themselves
+ * live in `lib/validation/enquiry.ts` next to every other action schema.
+ */
 
 const WINDOW_MS = 60 * 60 * 1_000;
 const MAX_PER_WINDOW = 5;

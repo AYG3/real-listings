@@ -1,3 +1,5 @@
+"use client";
+
 import { Input, Select, Textarea } from "@/components/ui/field";
 
 type BasicDefaults = {
@@ -12,14 +14,17 @@ type BasicDefaults = {
 /**
  * `showStatus` is false for agent submissions: agents cannot choose a status,
  * they always enter moderation as drafts. `defaults` is what makes the same
- * fields reusable on the edit screen.
+ * fields reusable on the edit screen, and `fieldErrors` is what the server
+ * action hands back when a submit fails validation.
  */
 export default function BasicInformation({
   showStatus = true,
   defaults,
+  fieldErrors,
 }: {
   showStatus?: boolean;
   defaults?: BasicDefaults;
+  fieldErrors?: Record<string, string>;
 }) {
   return (
     <section className="space-y-4">
@@ -32,6 +37,7 @@ export default function BasicInformation({
         <Input
           label="Listing title"
           name="title"
+          error={fieldErrors?.title}
           type="text"
           placeholder="Modern 4 bedroom duplex"
           defaultValue={defaults?.title}
@@ -41,6 +47,7 @@ export default function BasicInformation({
         <Input
           label="Price (NGN)"
           name="price"
+          error={fieldErrors?.price}
           type="number"
           inputMode="numeric"
           min={0}
@@ -49,7 +56,7 @@ export default function BasicInformation({
           required
         />
 
-        <Select label="Listing type" name="type" defaultValue={defaults?.type ?? "HOUSE"}>
+        <Select label="Listing type" name="type" error={fieldErrors?.type} defaultValue={defaults?.type ?? "HOUSE"}>
           <option value="HOUSE">House</option>
           <option value="LAND">Land</option>
         </Select>
@@ -57,6 +64,7 @@ export default function BasicInformation({
         <Select
           label="Purpose"
           name="transactionType"
+          error={fieldErrors?.transactionType}
           defaultValue={defaults?.transactionType ?? "sale"}
         >
           <option value="sale">Sale</option>
@@ -91,6 +99,7 @@ export default function BasicInformation({
       <Textarea
         label="Description"
         name="description"
+        error={fieldErrors?.description}
         rows={4}
         defaultValue={defaults?.description}
         placeholder="Describe the property, the neighbourhood, and what makes it worth a viewing."

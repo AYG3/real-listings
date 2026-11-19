@@ -2,53 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import {
+  fieldErrorsOf,
+  listingFormSchema,
+  listingIdSchema,
+  toListingAttributes,
+} from "@/lib/validation";
 
 export type UpdateListingState = {
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
 };
-
-const listingSchema = z.object({
-  title: z.string().trim().min(4, "Give the listing a title").max(160),
-  description: z
-    .string()
-    .trim()
-    .min(20, "Describe the property in at least 20 characters")
-    .max(4000),
-  price: z.coerce.number().min(0, "Price cannot be negative"),
-  type: z.enum(["HOUSE", "LAND"]),
-  transactionType: z.enum(["sale", "rent", "short-let"]),
-  state: z.string().trim().min(2, "State is required").max(80),
-  city: z.string().trim().min(2, "City is required").max(80),
-  area: z.string().trim().max(120).optional(),
-  landmark: z.string().trim().max(160).optional(),
-  address: z.string().trim().min(4, "Street address is required").max(240),
-  negotiable: z.boolean(),
-  bedrooms: z.coerce.number().int().min(0).max(50).optional(),
-  bathrooms: z.coerce.number().int().min(0).max(50).optional(),
-  toilets: z.coerce.number().int().min(0).max(50).optional(),
-  parking: z.coerce.number().int().min(0).max(50).optional(),
-  size: z.string().trim().max(40).optional(),
-  sizeUnit: z.string().trim().max(20).optional(),
-  yearBuilt: z.string().trim().max(10).optional(),
-});
-
-function optionalNumber(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || !value.trim()) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function optionalText(value: FormDataEntryValue | null) {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
 
 export async function updateListing(
   listingId: string,
@@ -61,8 +31,13 @@ export async function updateListing(
     return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
+  const id = listingIdSchema.safeParse({ listingId });
+  if (!id.success) {
+    return { status: "error", message: "Listing not found." };
+  }
+
   const existing = await prisma.listing.findFirst({
-    where: { id: listingId, agentId: session.user.id },
+    where: { id: id.data.listingId, agentId: session.user.id },
     select: { id: true, slug: true },
   });
 
@@ -70,62 +45,18 @@ export async function updateListing(
     return { status: "error", message: "Listing not found." };
   }
 
-  const purpose = formData.get("transactionType");
-
-  const parsed = listingSchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    price: formData.get("price"),
-    type: formData.get("type") === "LAND" ? "LAND" : "HOUSE",
-    transactionType:
-      purpose === "rent" || purpose === "short-let" ? purpose : "sale",
-    state: formData.get("state"),
-    city: formData.get("city"),
-    area: optionalText(formData.get("area")),
-    landmark: optionalText(formData.get("landmark")),
-    address: formData.get("address"),
-    negotiable: formData.get("negotiable") === "on",
-    bedrooms: optionalNumber(formData.get("bedrooms")),
-    bathrooms: optionalNumber(formData.get("bathrooms")),
-    toilets: optionalNumber(formData.get("toilets")),
-    parking: optionalNumber(formData.get("parking")),
-    size: optionalText(formData.get("size")),
-    sizeUnit: optionalText(formData.get("sizeUnit")),
-    yearBuilt: optionalText(formData.get("yearBuilt")),
-  });
+  const parsed = listingFormSchema.safeParse(formData);
 
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = String(issue.path[0] ?? "form");
-      fieldErrors[key] ??= issue.message;
-    }
-
     return {
       status: "error",
       message: "Check the highlighted fields.",
-      fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 
   const data = parsed.data;
-
-  const attributes: Record<string, string | number | boolean> = {
-    negotiable: data.negotiable,
-    transactionType: data.transactionType,
-  };
-  for (const key of ["bedrooms", "bathrooms", "toilets", "parking"] as const) {
-    if (data[key] !== undefined) attributes[key] = data[key];
-  }
-  for (const key of [
-    "area",
-    "landmark",
-    "size",
-    "sizeUnit",
-    "yearBuilt",
-  ] as const) {
-    if (data[key]) attributes[key] = data[key];
-  }
+  const attributes = toListingAttributes(data);
 
   await prisma.listing.update({
     where: { id: existing.id },

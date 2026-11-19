@@ -30,7 +30,7 @@
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
 | **6 — Demo mode & recruiter theatre** | ✅ **Complete** — [details](#phase-6--implementation-progress) |
-| 7 — Engineering credibility | ⚠️ Partial — CI green, zero tests |
+| **7 — Engineering credibility** | ⚠️ **Mostly complete** — 91 tests, validation layer, docs; CI/Playwright/Lighthouse unverified — [details](#phase-7--implementation-progress) |
 | 8 — Portfolio packaging & launch | ⬜ Not started |
 
 A one-sentence summary of the strategy:
@@ -1101,13 +1101,45 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 
 **Acceptance criteria**
 
-- [ ] CI is green on `main` and required for merge.
-- [ ] `npm test` and `npx playwright test` pass locally from a clean clone.
-- [ ] Zero `any`, zero ESLint errors, zero unlabeled form fields.
-- [ ] Lighthouse a11y ≥ 95 on 5 sampled pages.
-- [ ] A rate-limited enquiry returns a clear 429 message.
-- [ ] Every server action has a guard **and** a Zod parse (grep-verifiable).
-- [ ] `docs/architecture.md` explains the three-layer auth model and the JSON-attributes tradeoff.
+- [ ] CI is green on `main` and required for merge. **Configured, not verified:** the workflow now runs lint → typecheck → unit tests → build, but this branch has not been pushed and `gh` is unauthenticated in this environment, so no remote run exists to point at.
+- [x] `npm test` passes locally from a clean checkout. **91 tests across 9 files.**
+- [ ] `npx playwright test` passes locally. **Blocked:** there is no Playwright suite, and installing it needs a registry fetch that this session was denied. The flows it would cover were exercised by hand instead (see the evidence table).
+- [x] Zero `any`, zero ESLint errors, zero unlabeled form fields. `grep -c ": any"` outside `src/prisma/generated` → 0; `eslint --max-warnings=0` clean; every input/select/textarea is either a `ui/field` primitive (which renders a `<label htmlFor>`) or wrapped in a `<label>`/carries `aria-label`.
+- [ ] Lighthouse a11y ≥ 95 on 5 sampled pages. **Blocked:** Lighthouse cannot be installed here (`npx` fetch denied). Recorded as unmeasured rather than assumed.
+- [x] A rate-limited enquiry returns a clear 429 message. Verified in the browser: the sixth submission in a row shows "Too many enquiries from this connection. Try again in about 60 minutes." as an inline `role="alert"`. Note it is a friendly form message, not an HTTP 429 — server actions return 200 with the state.
+- [x] Every server action has a guard **and** a Zod parse. Enforced by [`actions.test.ts`](../src/lib/validation/actions.test.ts), which fails if any exported action lacks either.
+- [x] `docs/architecture.md` explains the three-layer auth model and the JSON-attributes tradeoff.
+
+#### Phase 7 — Implementation progress
+
+**Status: substantially complete.** Verified 19 November 2026. Three criteria are blocked on tooling this environment would not install (CI remote run, Playwright, Lighthouse) and are left unticked rather than claimed.
+
+| # | Scope item | Status | Detail |
+| --- | --- | --- | --- |
+| 1 | Zod schemas in `lib/validation` | ✅ | Five modules: `common` (FormData readers, `fieldErrorsOf`), `listing` (one schema shared by create + edit, `toListingAttributes`), `enquiry`, `admin`, `agent`. Every action file now imports from here; the six inline schema copies are gone. |
+| 2 | Parse at every action boundary | ✅ | `createListing` previously wrote listings with **no validation at all** — a blank price became ₦0 and an empty title became "Untitled property". It now parses, returns typed field errors, and the form renders them per field via `aria-invalid` + `role="alert"`. `toggleSavedListing`, `mergeGuestSaves`, `archiveListing` and `restoreListing` gained parses too. |
+| 2a | Field errors rendered inline | ✅ | The three form sections take a `fieldErrors` prop; `ListingFields` composes them for both forms. Verified on create (5 fields flagged at once) and edit (description too short). |
+| 3 | Tests (30+ target) | ✅ 91 | `format` (15), `validation/listing` (12), `validation/enquiry` (9), `validation/admin+agent` (10), `listing/transitions` (10), `listing/filters` (13), `validation/actions` (15, the boundary audit), plus the pre-existing cache and JSON-LD suites. |
+| 4 | CI | ⚠️ | `npm test` step added between typecheck and build. Remote run unverified (no push, `gh` unauthenticated). |
+| 5 | Accessibility pass | ⚠️ | Structural work already in place (landmarks, one `h1` per page, labelled controls, `aria-live`/`role="status"` on async results, `motion-reduce` transitions, alt text everywhere). No Lighthouse audit could be run to score it. |
+| 6 | Performance pass | ⚠️ | Three changes, measured: the hero's stats query moved behind `<Suspense>` so the `<h1>` (the LCP element) is no longer blocked by a cross-region round trip; aggregate stats cached 60 s under the listing prefix; listing-card images dropped to `quality={62}`. |
+| 7 | Security pass | ◻️ | Rate limiting, honeypot, CSP-ish headers via `proxy.ts`, scoped `remotePatterns` and server-only env already exist. Dependency audit not run. |
+| 8 | Docs for engineers | ✅ | [`architecture.md`](../docs/architecture.md), [`authorization.md`](../docs/authorization.md), [`decisions/0001-json-attributes.md`](../docs/decisions/0001-json-attributes.md), [`decisions/0002-audit-in-action.md`](../docs/decisions/0002-audit-in-action.md). |
+
+**Measured effect of the performance pass**
+
+Homepage, Chrome DevTools emulation (390 × 844, 4× CPU throttle, 150 ms latency, 1.6 Mbps down, cache disabled), production build, LCP read from `PerformanceObserver`:
+
+| | Before | After |
+| --- | --- | --- |
+| LCP element | `h1` (blocked by the stats query) | `h1` (streams immediately) |
+| LCP | 2 812 / 2 272 ms | 2 440 / 1 584 / 1 112 ms (median **1 584 ms**) |
+| Image bytes decoded | ~540 KB | ~380 KB |
+| Total decoded | ~1 309 KB | ~1 053 KB |
+
+This does **not** close the Phase 3 LCP criterion, which is defined against Lighthouse's simulated throttling; Lighthouse could not be installed in this session, so the simulated number is unchanged and the criterion stays open. The honest statement is: the LCP element is now unblocked and the payload is a third smaller, measured on the device profile that matters.
+
+**Also fixed while in here:** `createListingSlug` appended only `Date.now()`, so two listings created in the same millisecond collided on the slug's unique index (a 500 for the second agent). It now adds a 4-character random suffix; a test covers it.
 
 ---
 

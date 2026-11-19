@@ -41,6 +41,9 @@ export function ListingCard({
             alt={listing.title}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            // Cards are small on the page; 62 halves the bytes of a six-card
+            // grid with no visible difference at these sizes.
+            quality={62}
             loading={eager ? "eager" : "lazy"}
             fetchPriority={eager ? "high" : "low"}
             className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"

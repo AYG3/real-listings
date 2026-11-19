@@ -53,7 +53,7 @@ Built with Next.js 16 (App Router), PostgreSQL, Prisma 7, Better Auth and Cloudi
 
 - Buyer `/account` pages for saved listings and enquiries.
 - Phase 7 credibility work: critical-path E2E tests, and the bundle budget that the open LCP measurement needs.
-- Automated tests stand at 6 unit tests (`npm test`); CI runs lint, typecheck, tests and build.
+- Automated tests stand at 91 unit tests (`npm test`) covering the validation schemas, formatters, filter parsing, status transitions, the public cache and a server-action boundary audit; CI runs lint, typecheck, tests and build.
 
 ## Getting started
 
@@ -145,6 +145,14 @@ src/
   proxy.ts               Security headers + optimistic portal gate
   prisma/generated/      Generated Prisma client (not committed)
 ```
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, and the trade-offs behind them.
+- [`docs/authorization.md`](docs/authorization.md) — the three layers that decide who may do what.
+- [`docs/decisions/`](docs/decisions) — ADRs: JSON attributes, audit-in-action.
+- [`docs/demo-script.md`](docs/demo-script.md) — the 90-second reviewer path.
+- [`plans/01-portfolio-readiness-plan.md`](plans/01-portfolio-readiness-plan.md) — the phased plan with evidence.
 
 ## Security notes
 

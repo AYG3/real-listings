@@ -1,18 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import { inquiryUpdateSchema } from "@/lib/validation";
 
 export type InquiryActionResult = { status: "success" | "error"; message: string };
-
-const schema = z.object({
-  inquiryId: z.string().min(1),
-  status: z.enum(["NEW", "CONTACTED", "VIEWING_SCHEDULED", "CLOSED"]),
-  note: z.string().trim().max(2000).optional(),
-});
 
 const labels: Record<string, string> = {
   NEW: "Moved back to new.",
@@ -30,7 +24,7 @@ export async function updateInquiry(
   status: string,
   note?: string,
 ): Promise<InquiryActionResult> {
-  const parsed = schema.safeParse({ inquiryId, status, note });
+  const parsed = inquiryUpdateSchema.safeParse({ inquiryId, status, note });
 
   if (!parsed.success) {
     return { status: "error", message: "That update is not valid." };

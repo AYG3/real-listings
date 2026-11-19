@@ -1,19 +1,31 @@
+"use client";
+
 import Link from "next/link";
-import BasicInformation from "@/app/admin/(protected)/upload/_components/basic-information";
-import Location from "@/app/admin/(protected)/upload/_components/location";
-import ListingDetails from "@/app/admin/(protected)/upload/_components/listing-details";
+import { useActionState } from "react";
+import ListingFields from "@/app/admin/(protected)/upload/_components/listing-fields";
 import { buttonStyles } from "@/components/ui/button";
-import { createListing } from "../../_components/actions";
+import { createListing, type CreateListingState } from "../../_components/actions";
+
+const initialState: CreateListingState = { status: "idle" };
 
 export default function ListingForm() {
+  const [state, formAction, pending] = useActionState(createListing, initialState);
+
   return (
     <form
-      action={createListing}
+      action={formAction}
       className="space-y-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6 lg:p-8"
     >
-      <BasicInformation showStatus={false} />
-      <Location />
-      <ListingDetails />
+      {state.status === "error" ? (
+        <p
+          role="alert"
+          className="rounded-control border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-semibold text-danger"
+        >
+          {state.message}
+        </p>
+      ) : null}
+
+      <ListingFields fieldErrors={state.fieldErrors} />
 
       <p className="text-sm text-muted-500">
         Your listing is submitted for review and goes live once an admin
@@ -28,8 +40,8 @@ export default function ListingForm() {
           Cancel
         </Link>
 
-        <button type="submit" className={buttonStyles()}>
-          Create Property
+        <button type="submit" disabled={pending} className={buttonStyles()}>
+          {pending ? "Creating…" : "Create Property"}
         </button>
       </div>
     </form>

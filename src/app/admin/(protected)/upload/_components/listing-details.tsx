@@ -17,10 +17,12 @@ type DetailsDefaults = {
 export default function ListingDetails({
   defaults,
   media,
+  fieldErrors,
 }: {
   defaults?: DetailsDefaults;
   /** Replaces the upload widget on the edit screen, where photos already exist. */
   media?: ReactNode;
+  fieldErrors?: Record<string, string>;
 } = {}) {
   return (
     <section className="space-y-4">
@@ -47,6 +49,7 @@ export default function ListingDetails({
         <Input
           label="Bedrooms"
           name="bedrooms"
+          error={fieldErrors?.bedrooms}
           type="number"
           inputMode="numeric"
           min={0}
@@ -56,6 +59,7 @@ export default function ListingDetails({
         <Input
           label="Bathrooms"
           name="bathrooms"
+          error={fieldErrors?.bathrooms}
           type="number"
           inputMode="numeric"
           min={0}
@@ -65,6 +69,7 @@ export default function ListingDetails({
         <Input
           label="Toilets"
           name="toilets"
+          error={fieldErrors?.toilets}
           type="number"
           inputMode="numeric"
           min={0}
@@ -74,6 +79,7 @@ export default function ListingDetails({
         <Input
           label="Parking spaces"
           name="parking"
+          error={fieldErrors?.parking}
           type="number"
           inputMode="numeric"
           min={0}
@@ -83,12 +89,14 @@ export default function ListingDetails({
         <Input
           label="Size"
           name="size"
+          error={fieldErrors?.size}
           placeholder="420"
           defaultValue={defaults?.size}
         />
         <Select
           label="Size unit"
           name="sizeUnit"
+          error={fieldErrors?.sizeUnit}
           defaultValue={defaults?.sizeUnit ?? "sqm"}
         >
           <option value="sqm">sqm</option>
@@ -98,6 +106,7 @@ export default function ListingDetails({
         <Input
           label="Year built"
           name="yearBuilt"
+          error={fieldErrors?.yearBuilt}
           inputMode="numeric"
           placeholder="2021"
           defaultValue={defaults?.yearBuilt}

@@ -2,7 +2,13 @@
 
 import { headers } from "next/headers";
 import { getSession } from "@/lib/auth/guards";
-import { checkRateLimit, clientKey, enquirySchema } from "@/lib/listing/inquiry";
+import { checkRateLimit, clientKey } from "@/lib/listing/inquiry";
+import {
+  enquirySchema,
+  fieldErrorsOf,
+  mergeSavesSchema,
+  saveToggleSchema,
+} from "@/lib/validation";
 import prisma from "@/lib/prisma";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
 
@@ -42,18 +48,10 @@ export async function submitEnquiry(
   });
 
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = issue.path[0];
-      if (typeof key === "string" && !fieldErrors[key]) {
-        fieldErrors[key] = issue.message;
-      }
-    }
-
     return {
       status: "error",
       message: "Please check the highlighted fields.",
-      fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 
@@ -136,6 +134,9 @@ export async function toggleSavedListing(
   listingId: string,
   save: boolean,
 ): Promise<SavedResult> {
+  const parsed = saveToggleSchema.safeParse({ listingId });
+  if (!parsed.success) return { saved: false, requiresAuth: true };
+
   const session = await getSession();
 
   if (!session?.user) return { saved: false, requiresAuth: true };
@@ -144,17 +145,19 @@ export async function toggleSavedListing(
     return { saved: save, demoReadOnly: true };
   }
 
+  const target = parsed.data.listingId;
+
   if (save) {
     await prisma.savedListing.upsert({
       where: {
-        userId_listingId: { userId: session.user.id, listingId },
+        userId_listingId: { userId: session.user.id, listingId: target },
       },
       update: {},
-      create: { userId: session.user.id, listingId },
+      create: { userId: session.user.id, listingId: target },
     });
   } else {
     await prisma.savedListing.deleteMany({
-      where: { userId: session.user.id, listingId },
+      where: { userId: session.user.id, listingId: target },
     });
   }
 
@@ -165,10 +168,13 @@ export async function toggleSavedListing(
 export async function mergeGuestSaves(
   listingIds: string[],
 ): Promise<{ merged: number }> {
-  const session = await getSession();
-  if (!session?.user || listingIds.length === 0) return { merged: 0 };
+  const parsed = mergeSavesSchema.safeParse({ listingIds });
+  if (!parsed.success) return { merged: 0 };
 
-  const candidates = [...new Set(listingIds)].slice(0, 50);
+  const session = await getSession();
+  if (!session?.user || parsed.data.listingIds.length === 0) return { merged: 0 };
+
+  const candidates = [...new Set(parsed.data.listingIds)].slice(0, 50);
 
   const published = await prisma.listing.findMany({
     where: { id: { in: candidates }, status: "PUBLISHED" },

@@ -3,17 +3,23 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import type { ReactNode } from "react";
+import ListingFields from "@/app/admin/(protected)/upload/_components/listing-fields";
 import { buttonStyles } from "@/components/ui/button";
 import { updateListing, type UpdateListingState } from "../actions";
 
 const initialState: UpdateListingState = { status: "idle" };
 
+type ListingFieldDefaults = Parameters<typeof ListingFields>[0]["defaults"];
+
 export function EditListingForm({
   listingId,
-  children,
+  defaults,
+  media,
 }: {
   listingId: string;
-  children: ReactNode;
+  defaults?: ListingFieldDefaults;
+  /** Image manager plus uploader, rendered in place of the create-only uploader. */
+  media?: ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(
     updateListing.bind(null, listingId),
@@ -31,15 +37,14 @@ export function EditListingForm({
           className="rounded-control border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-semibold text-danger"
         >
           {state.message}
-          {state.fieldErrors ? (
-            <span className="mt-1 block font-normal">
-              {Object.values(state.fieldErrors).join(" · ")}
-            </span>
-          ) : null}
         </p>
       ) : null}
 
-      {children}
+      <ListingFields
+        defaults={defaults}
+        fieldErrors={state.fieldErrors}
+        media={media}
+      />
 
       <div className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:justify-end">
         <Link

@@ -1,8 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BasicInformation from "@/app/admin/(protected)/upload/_components/basic-information";
-import Location from "@/app/admin/(protected)/upload/_components/location";
-import ListingDetails from "@/app/admin/(protected)/upload/_components/listing-details";
 import { StatusPill } from "@/components/ui/badge";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
@@ -59,61 +56,49 @@ export default async function EditListingPage({ params }: PageProps) {
           </Link>
         </header>
 
-        <EditListingForm listingId={listing.id}>
-          <>
-              <BasicInformation
-                showStatus={false}
-                defaults={{
-                  title: listing.title,
-                  price: String(toNumber(listing.price)),
-                  type: listing.type,
-                  transactionType,
-                  negotiable: attributes.negotiable === true,
-                  description: listing.description,
-                }}
+        <EditListingForm
+          listingId={listing.id}
+          defaults={{
+            title: listing.title,
+            price: String(toNumber(listing.price)),
+            type: listing.type,
+            transactionType,
+            negotiable: attributes.negotiable === true,
+            description: listing.description,
+            state: listing.state,
+            city: listing.city,
+            area: asString(attributes.area),
+            landmark: asString(attributes.landmark),
+            address: listing.address,
+            bedrooms: asNumber(attributes.bedrooms),
+            bathrooms: asNumber(attributes.bathrooms),
+            toilets: asNumber(attributes.toilets),
+            parking: asNumber(attributes.parking),
+            size: asString(attributes.size),
+            sizeUnit: asString(attributes.sizeUnit),
+            yearBuilt: asString(attributes.yearBuilt),
+          }}
+          media={
+            <div className="space-y-3">
+              <ImageManager
+                images={listing.images.map((image) => ({
+                  id: image.id,
+                  url: image.url,
+                  isCover: image.isCover,
+                }))}
               />
-              <Location
-                defaults={{
-                  state: listing.state,
-                  city: listing.city,
-                  area: asString(attributes.area),
-                  landmark: asString(attributes.landmark),
-                  address: listing.address,
-                }}
-              />
-              <ListingDetails
-                defaults={{
-                  bedrooms: asNumber(attributes.bedrooms),
-                  bathrooms: asNumber(attributes.bathrooms),
-                  toilets: asNumber(attributes.toilets),
-                  parking: asNumber(attributes.parking),
-                  size: asString(attributes.size),
-                  sizeUnit: asString(attributes.sizeUnit),
-                  yearBuilt: asString(attributes.yearBuilt),
-                }}
-                media={
-                  <div className="space-y-3">
-                    <ImageManager
-                      images={listing.images.map((image) => ({
-                        id: image.id,
-                        url: image.url,
-                        isCover: image.isCover,
-                      }))}
-                    />
-                    <div className="rounded-control border border-ink-900/10 bg-white p-3">
-                      <p className="mb-2 text-xs font-semibold text-ink-900">
-                        Add more photos
-                        <span className="ml-1 font-normal text-muted-500">
-                          (appended after the photos above)
-                        </span>
-                      </p>
-                      <CloudinaryUploadWidget />
-                    </div>
-                  </div>
-                }
-              />
-          </>
-        </EditListingForm>
+              <div className="rounded-control border border-ink-900/10 bg-white p-3">
+                <p className="mb-2 text-xs font-semibold text-ink-900">
+                  Add more photos
+                  <span className="ml-1 font-normal text-muted-500">
+                    (appended after the photos above)
+                  </span>
+                </p>
+                <CloudinaryUploadWidget />
+              </div>
+            </div>
+          }
+        />
       </div>
     </div>
   );

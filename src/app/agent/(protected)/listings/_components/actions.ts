@@ -4,86 +4,59 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
+import { createListingSlug } from "@/lib/format";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
-import { isDemoSessionUser } from "@/lib/demo/guard";
+import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import {
+  fieldErrorsOf,
+  listingFormSchema,
+  toListingAttributes,
+  type FormState,
+} from "@/lib/validation";
 
-function getString(formData: FormData, key: string, fallback = "") {
-  const value = formData.get(key);
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
+export type CreateListingState = FormState;
 
-function getNumber(formData: FormData, key: string) {
-  const raw = getString(formData, key);
-  if (!raw) return undefined;
-
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : undefined;
-}
-
-function getListingType(formData: FormData) {
-  return getString(formData, "type") === "LAND" ? "LAND" : "HOUSE";
-}
-
-function createSlug(title: string) {
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return `${slug || "listing"}-${Date.now()}`;
-}
-
-export async function createListing(formData: FormData) {
+export async function createListing(
+  _previous: CreateListingState,
+  formData: FormData,
+): Promise<CreateListingState> {
   const session = await requireAgent();
 
   if (isDemoSessionUser(session.user)) {
-    redirect("/agent/listings?demo=1");
+    return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
-  const title = getString(formData, "title", "Untitled property");
-  const attributes: Record<string, string | number | boolean> = {
-    negotiable: formData.get("negotiable") === "on",
-  };
+  const parsed = listingFormSchema.safeParse(formData);
 
-  for (const key of ["bedrooms", "bathrooms", "toilets", "parking"]) {
-    const value = getNumber(formData, key);
-    if (value !== undefined) {
-      attributes[key] = value;
-    }
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Check the highlighted fields and try again.",
+      fieldErrors: fieldErrorsOf(parsed.error),
+    };
   }
 
-  for (const key of [
-    "area",
-    "landmark",
-    "size",
-    "sizeUnit",
-    "yearBuilt",
-    "transactionType",
-  ]) {
-    const value = getString(formData, key);
-    if (value) {
-      attributes[key] = value;
-    }
-  }
+  const data = parsed.data;
 
   // Agent submissions always enter moderation as drafts; the client cannot
   // promote a listing to PUBLISHED from this form.
   const listing = await prisma.listing.create({
     data: {
-      title,
-      description: getString(formData, "description", `${title} description`),
-      type: getListingType(formData),
+      title: data.title,
+      description: data.description,
+      type: data.type,
       status: "DRAFT",
-      price: getNumber(formData, "price") ?? 0,
+      intent: data.transactionType === "sale" ? "SALE" : "RENT",
+      price: data.price,
       currency: "NGN",
-      address: getString(formData, "address", "Address unavailable"),
-      city: getString(formData, "city", "City unavailable"),
-      state: getString(formData, "state", "State unavailable"),
+      address: data.address,
+      city: data.city,
+      state: data.state,
       country: "Nigeria",
-      slug: createSlug(title),
+      slug: createListingSlug(data.title),
       agentId: session.user.id,
-      attributes,
+      attributes: toListingAttributes(data),
     },
   });
 

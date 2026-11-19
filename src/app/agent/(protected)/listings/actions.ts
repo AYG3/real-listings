@@ -1,37 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import { clearPublicCache } from "@/lib/listing/public-cache";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import { canTransitionListing, listingStatusSchema } from "@/lib/listing/transitions";
 
 export type ListingActionResult = {
   status: "success" | "error";
   message: string;
-};
-
-const statusSchema = z.object({
-  listingId: z.string().min(1),
-  status: z.enum([
-    "DRAFT",
-    "PUBLISHED",
-    "UNDER_OFFER",
-    "SOLD",
-    "RENTED",
-    "ARCHIVED",
-  ]),
-});
-
-/** Which statuses a listing may move to from its current one. */
-const allowedTransitions: Record<string, string[]> = {
-  DRAFT: ["PUBLISHED", "ARCHIVED"],
-  PUBLISHED: ["UNDER_OFFER", "SOLD", "RENTED", "DRAFT", "ARCHIVED"],
-  UNDER_OFFER: ["PUBLISHED", "SOLD", "RENTED", "DRAFT", "ARCHIVED"],
-  SOLD: ["PUBLISHED", "ARCHIVED"],
-  RENTED: ["PUBLISHED", "ARCHIVED"],
-  ARCHIVED: ["DRAFT"],
 };
 
 const successMessages: Record<string, string> = {
@@ -52,7 +30,7 @@ export async function updateListingStatus(
   listingId: string,
   status: string,
 ): Promise<ListingActionResult> {
-  const parsed = statusSchema.safeParse({ listingId, status });
+  const parsed = listingStatusSchema.safeParse({ listingId, status });
 
   if (!parsed.success) {
     return { status: "error", message: "That status is not available." };
@@ -77,8 +55,7 @@ export async function updateListingStatus(
     return { status: "success", message: successMessages[status] ?? "Updated." };
   }
 
-  const permitted = allowedTransitions[listing.status] ?? [];
-  if (!permitted.includes(parsed.data.status)) {
+  if (!canTransitionListing(listing.status, parsed.data.status)) {
     return {
       status: "error",
       message: `A ${listing.status.toLowerCase().replace("_", " ")} listing cannot be moved there.`,

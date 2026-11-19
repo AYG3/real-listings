@@ -67,9 +67,14 @@ export function slugify(input: string): string {
     .replace(/^-|-$/g, "");
 }
 
-/** Unique enough for listings; a plain slug would collide on duplicate titles. */
+/**
+ * Unique enough for listings: the timestamp orders them, and the random suffix
+ * keeps two creates in the same millisecond from colliding on the slug's
+ * unique index.
+ */
 export function createListingSlug(title: string): string {
-  return `${slugify(title) || "listing"}-${Date.now()}`;
+  const suffix = Math.random().toString(36).slice(2, 6);
+  return `${slugify(title) || "listing"}-${Date.now()}-${suffix}`;
 }
 
 export function formatArea(

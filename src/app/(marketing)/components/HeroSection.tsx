@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Search } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { getPublicStats } from "@/lib/listing/queries";
@@ -18,9 +19,27 @@ const fieldClass =
 const labelClass =
   "mb-1.5 block text-[11px] font-bold uppercase tracking-[0.12em] text-muted-500";
 
-export default async function HeroSection() {
+/**
+ * The stats line is the only part of the hero that needs the database, so it
+ * streams in on its own. Awaiting it here would hold back the `<h1>` — the
+ * largest element on the page — behind a cross-region query.
+ */
+async function HeroStats() {
   const stats = await getPublicStats();
 
+  return (
+    <p className="text-xs font-medium text-muted-500">
+      {stats.listings.toLocaleString("en-NG")} published{" "}
+      {stats.listings === 1 ? "listing" : "listings"} ·{" "}
+      {stats.agents.toLocaleString("en-NG")}{" "}
+      {stats.agents === 1 ? "agent" : "agents"} ·{" "}
+      {stats.cities.toLocaleString("en-NG")}{" "}
+      {stats.cities === 1 ? "city" : "cities"}
+    </p>
+  );
+}
+
+export default function HeroSection() {
   return (
     <section className="relative isolate overflow-hidden bg-forest-900">
       <div
@@ -100,14 +119,15 @@ export default async function HeroSection() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs font-medium text-muted-500">
-              {stats.listings.toLocaleString("en-NG")} published{" "}
-              {stats.listings === 1 ? "listing" : "listings"} ·{" "}
-              {stats.agents.toLocaleString("en-NG")}{" "}
-              {stats.agents === 1 ? "agent" : "agents"} ·{" "}
-              {stats.cities.toLocaleString("en-NG")}{" "}
-              {stats.cities === 1 ? "city" : "cities"}
-            </p>
+            <Suspense
+              fallback={
+                <p className="text-xs font-medium text-muted-500">
+                  Loading live inventory…
+                </p>
+              }
+            >
+              <HeroStats />
+            </Suspense>
 
             <div className="flex flex-wrap gap-3">
               <Link

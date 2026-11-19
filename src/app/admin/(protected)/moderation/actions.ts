@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import {
@@ -9,20 +8,14 @@ import {
   recordAudit,
 } from "@/lib/admin/moderation";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import {
+  agentDecisionSchema,
+  listingDecisionSchema,
+  listingIdSchema,
+  roleChangeSchema,
+} from "@/lib/validation";
 
 export type DecisionResult = { status: "success" | "error"; message: string };
-
-const listingDecisionSchema = z.object({
-  listingId: z.string().min(1),
-  decision: z.enum(["APPROVED", "REJECTED", "CHANGES_REQUESTED"]),
-  reason: z.string().trim().max(1000).optional(),
-});
-
-const agentDecisionSchema = z.object({
-  agentId: z.string().min(1),
-  decision: z.enum(["VERIFIED", "REJECTED"]),
-  reason: z.string().trim().max(1000).optional(),
-});
 
 function revalidatePublicSurfaces() {
   invalidateListingCache();
@@ -185,11 +178,6 @@ export async function decideAgent(
   };
 }
 
-const roleSchema = z.object({
-  userId: z.string().min(1),
-  role: z.enum(["BUYER", "AGENT", "ADMIN"]),
-});
-
 /**
  * Role changes are the most dangerous admin action here, so they are guarded
  * three ways: admin-only, never against your own account, and always audited
@@ -199,7 +187,7 @@ export async function changeUserRole(
   userId: string,
   role: string,
 ): Promise<DecisionResult> {
-  const parsed = roleSchema.safeParse({ userId, role });
+  const parsed = roleChangeSchema.safeParse({ userId, role });
 
   if (!parsed.success) {
     return { status: "error", message: "That role is not valid." };
@@ -257,8 +245,6 @@ export async function changeUserRole(
     message: `${label} is now ${parsed.data.role.toLowerCase()}.`,
   };
 }
-
-const listingIdSchema = z.object({ listingId: z.string().min(1) });
 
 async function setArchived(
   listingId: string,
@@ -324,9 +310,21 @@ async function setArchived(
 }
 
 export async function archiveListing(listingId: string) {
-  return setArchived(listingId, true);
+  const parsed = listingIdSchema.safeParse({ listingId });
+
+  if (!parsed.success) {
+    return { status: "error", message: "That listing is not valid." };
+  }
+
+  return setArchived(parsed.data.listingId, true);
 }
 
 export async function restoreListing(listingId: string) {
-  return setArchived(listingId, false);
+  const parsed = listingIdSchema.safeParse({ listingId });
+
+  if (!parsed.success) {
+    return { status: "error", message: "That listing is not valid." };
+  }
+
+  return setArchived(parsed.data.listingId, false);
 }

@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { cachedByKey } from "./public-cache";
 import type { Prisma } from "@/prisma/generated/client";
 import { PAGE_SIZE, type SearchFilters } from "./filters";
 
@@ -112,7 +113,16 @@ export type PublicStats = {
 };
 
 /** Real counts for the hero. Never hardcode these. */
+/**
+ * Aggregate counts for the homepage. Three queries for a line of copy, and the
+ * numbers only move when a listing does — so they share the listing cache
+ * prefix and every listing mutation clears them.
+ */
 export async function getPublicStats(): Promise<PublicStats> {
+  return cachedByKey("listing:stats", loadPublicStats, 60_000);
+}
+
+async function loadPublicStats(): Promise<PublicStats> {
   const [listings, agentGroups, cityGroups] = await Promise.all([
     prisma.listing.count({ where: { status: "PUBLISHED" } }),
     prisma.listing.groupBy({

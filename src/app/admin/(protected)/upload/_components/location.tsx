@@ -1,3 +1,5 @@
+"use client";
+
 import { Input, Textarea } from "@/components/ui/field";
 
 type LocationDefaults = {
@@ -10,8 +12,10 @@ type LocationDefaults = {
 
 export default function Location({
   defaults,
+  fieldErrors,
 }: {
   defaults?: LocationDefaults;
+  fieldErrors?: Record<string, string>;
 } = {}) {
   return (
     <section className="space-y-4">
@@ -24,6 +28,7 @@ export default function Location({
         <Input
           label="State"
           name="state"
+          error={fieldErrors?.state}
           placeholder="Lagos"
           defaultValue={defaults?.state}
           required
@@ -31,6 +36,7 @@ export default function Location({
         <Input
           label="City"
           name="city"
+          error={fieldErrors?.city}
           placeholder="Lekki"
           defaultValue={defaults?.city}
           required
@@ -38,12 +44,14 @@ export default function Location({
         <Input
           label="Area"
           name="area"
+          error={fieldErrors?.area}
           placeholder="Phase 2"
           defaultValue={defaults?.area}
         />
         <Input
           label="Landmark"
           name="landmark"
+          error={fieldErrors?.landmark}
           placeholder="Near Admiralty Way"
           defaultValue={defaults?.landmark}
         />
@@ -52,6 +60,7 @@ export default function Location({
       <Textarea
         label="Street address"
         name="address"
+        error={fieldErrors?.address}
         rows={2}
         defaultValue={defaults?.address}
         placeholder="14 Admiralty Way, Lekki Phase 1"

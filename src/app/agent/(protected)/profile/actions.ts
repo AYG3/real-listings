@@ -1,29 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import { DEMO_READ_ONLY_MESSAGE, isDemoSessionUser } from "@/lib/demo/guard";
+import { agentProfileSchema, fieldErrorsOf } from "@/lib/validation";
 
 export type ProfileState = {
   status: "idle" | "success" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
 };
-
-const schema = z.object({
-  name: z.string().trim().min(2, "Your name is required").max(120),
-  phone: z
-    .string()
-    .trim()
-    .max(30)
-    .refine((value) => value === "" || /^[+()\d\s-]{7,}$/.test(value), "Enter a valid phone number")
-    .optional(),
-  agencyName: z.string().trim().max(160).optional(),
-  bio: z.string().trim().max(1200).optional(),
-  image: z.string().trim().max(500).optional(),
-});
 
 function optionalText(value: FormDataEntryValue | null) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
@@ -39,7 +26,7 @@ export async function updateAgentProfile(
     return { status: "error", message: DEMO_READ_ONLY_MESSAGE };
   }
 
-  const parsed = schema.safeParse({
+  const parsed = agentProfileSchema.safeParse({
     name: formData.get("name"),
     phone: optionalText(formData.get("phone")),
     agencyName: optionalText(formData.get("agencyName")),
@@ -48,12 +35,11 @@ export async function updateAgentProfile(
   });
 
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = String(issue.path[0] ?? "form");
-      fieldErrors[key] ??= issue.message;
-    }
-    return { status: "error", message: "Check the highlighted fields.", fieldErrors };
+    return {
+      status: "error",
+      message: "Check the highlighted fields.",
+      fieldErrors: fieldErrorsOf(parsed.error),
+    };
   }
 
   const data = parsed.data;
