@@ -25,6 +25,14 @@ npm run lint && npm run typecheck && npm test && npm run build
 
 CI runs the same four steps, in that order, on every pull request to `main`.
 
+If you touched a layout, a form or a colour, also run the accessibility audit against a
+running build — it needs Chrome and the seeded accounts:
+
+```bash
+npm run build && npm start          # in one terminal
+BASE_URL=http://localhost:3000 npm run a11y   # in another
+```
+
 ## Conventions
 
 - **Server actions parse before they write.** Every action gets a schema from

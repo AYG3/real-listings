@@ -29,7 +29,7 @@ export default async function AdminAuditPage() {
   const entries = await getAuditFeed();
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -92,7 +92,7 @@ export default async function AdminAuditPage() {
                       <span className="font-semibold text-gray-900">
                         {entry.targetName}
                       </span>
-                      <span className="mt-0.5 block text-xs text-gray-400">
+                      <span className="mt-0.5 block text-xs text-gray-600">
                         {entry.targetType}
                       </span>
                     </td>
@@ -106,6 +106,6 @@ export default async function AdminAuditPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

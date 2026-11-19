@@ -21,7 +21,7 @@ export default async function AdminModerationPage({ searchParams }: PageProps) {
   const pendingAgents = agents.filter((agent) => agent.agentStatus === "PENDING");
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -105,6 +105,6 @@ export default async function AdminModerationPage({ searchParams }: PageProps) {
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }

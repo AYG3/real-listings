@@ -98,7 +98,7 @@ export function UserTable({ users }: { users: AdminUser[] }) {
                 </td>
                 <td className="px-4 py-3">
                   {user.isSelf ? (
-                    <span className="text-xs font-semibold text-gray-400">
+                    <span className="text-xs font-semibold text-gray-600">
                       Your account
                     </span>
                   ) : (

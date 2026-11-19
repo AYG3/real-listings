@@ -14,7 +14,7 @@ export default async function AdminUsersPage() {
   };
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header>
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
@@ -52,6 +52,6 @@ export default async function AdminUsersPage() {
           <UserTable users={users} />
         </section>
       </div>
-    </main>
+    </div>
   );
 }

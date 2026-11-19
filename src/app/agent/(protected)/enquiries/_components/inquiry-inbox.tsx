@@ -145,7 +145,7 @@ export function InquiryInbox({ inquiries }: { inquiries: InquiryRow[] }) {
                   <p className="mt-2 line-clamp-2 text-sm text-gray-600">
                     {inquiry.message}
                   </p>
-                  <p className="mt-2 text-xs font-medium text-gray-400">
+                  <p className="mt-2 text-xs font-medium text-gray-600">
                     {inquiry.age}
                   </p>
                 </button>

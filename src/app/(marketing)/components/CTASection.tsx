@@ -20,7 +20,7 @@ export default function CTASection() {
                 Request a quote <ChevronRight className="w-4 h-4" strokeWidth={3} />
               </button>
               
-              <span className="text-[13px] font-bold text-gray-400 uppercase">or</span>
+              <span className="text-[13px] font-bold uppercase text-gray-600">or</span>
               
               <button className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 px-8 py-3.5 rounded-full text-sm font-bold hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center gap-2">
                 See catalogue <ChevronRight className="w-4 h-4" strokeWidth={3} />

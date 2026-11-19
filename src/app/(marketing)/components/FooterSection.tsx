@@ -58,8 +58,8 @@ export default function FooterSection() {
 
           {/* About Us */}
           <div>
-            <h4 className="font-bold mb-6 text-sm">About Us</h4>
-            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+            <h2 className="mb-6 text-sm font-bold">About Us</h2>
+            <ul className="space-y-4 text-[13px] font-medium text-white/70">
               <li>
                 <Link href="/buy" className="transition-colors hover:text-white">
                   Browse properties
@@ -95,8 +95,8 @@ export default function FooterSection() {
 
           {/* Community */}
           <div>
-            <h4 className="font-bold mb-6 text-sm">Community</h4>
-            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+            <h2 className="mb-6 text-sm font-bold">Community</h2>
+            <ul className="space-y-4 text-[13px] font-medium text-white/70">
               <li>
                 <a href={`mailto:${brand.supportEmail}`} className="transition-colors hover:text-white">
                   Contact support
@@ -112,8 +112,8 @@ export default function FooterSection() {
 
           {/* Social Media */}
           <div>
-            <h4 className="font-bold mb-6 text-sm">Social Media</h4>
-            <ul className="space-y-4 text-[13px] font-medium text-white/50">
+            <h2 className="mb-6 text-sm font-bold">Social Media</h2>
+            <ul className="space-y-4 text-[13px] font-medium text-white/70">
               <li>
                 <Link href="/login" className="transition-colors hover:text-white">
                   Agent portal

@@ -74,7 +74,7 @@ export function ProfileForm({ defaults }: { defaults: Defaults }) {
               disabled
               className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-500"
             />
-            <span className="mt-1 block text-xs text-gray-400">
+            <span className="mt-1 block text-xs text-gray-600">
               Sign-in email cannot be changed here.
             </span>
           </label>

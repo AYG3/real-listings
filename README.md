@@ -211,11 +211,12 @@ Measured on this machine, production build, not projected numbers.
 | Landing-page LCP | **1 584 ms** median (2 440 / 1 584 / 1 112) | Chrome DevTools emulation: 390 px, 4× CPU, 1.6 Mbps, cache disabled |
 | Landing-page payload | **1 053 KB** decoded / **380 KB** of images | same run, `PerformanceResourceTiming` |
 | Guest enquiry rate limit | 5 per hour per IP, verified | sixth submission returns an inline 429-style message |
-| Accessibility | labels, landmarks, one `h1` per page, `aria-live` on async results, reduced-motion transitions | structural audit; a Lighthouse score is **not** claimed — see [the plan](plans/01-portfolio-readiness-plan.md#phase-7--implementation-progress) |
+| Accessibility | **0 violations** on 8 pages (public, admin and agent) | `npm run a11y` — axe-core with WCAG 2.0/2.1/2.2 A+AA and best-practice rules, in Chrome with real layout |
 
 Lighthouse's simulated throttling reads ~0.9 s higher than DevTools emulation on this hardware,
 so the numbers above are labelled with the method that produced them rather than presented as
-a Lighthouse score.
+a Lighthouse score. The accessibility row is an axe run, not a Lighthouse score — it checks the
+rules that actually fail in practice, on the pages that matter, with layout and hydration.
 
 ## Screenshots
 
@@ -293,6 +294,7 @@ Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboa
 | `npm run lint` | ESLint (Next.js core-web-vitals + TypeScript rules). |
 | `npm run typecheck` | `tsc --noEmit`. |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`). |
+| `npm run a11y` | axe-core audit of 8 pages against a running build; exits non-zero on a violation. Needs Chrome and `BASE_URL`. |
 | `npm run db:migrate` | Create and apply a migration in development. |
 | `npm run db:seed` | Seed the ADMIN / AGENT / BUYER accounts (idempotent). |
 | `npm run db:studio` | Open Prisma Studio. |

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Toaster } from "sonner";
 import AgentNav from "./components/AgentNav";
 import { requireAgent } from "@/lib/auth/guards";
 
@@ -14,7 +13,6 @@ export default async function AgentLayout({ children }: AgentLayoutProps) {
     <div className="flex min-h-screen bg-surface">
       <AgentNav user={{ name: session.user.name, email: session.user.email }} />
       <main className="flex-1">{children}</main>
-      <Toaster richColors position="top-right" />
     </div>
   );
 }

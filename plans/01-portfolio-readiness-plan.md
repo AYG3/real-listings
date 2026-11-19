@@ -23,14 +23,14 @@
 | Phase | Status |
 | --- | --- |
 | **0 — Stabilize the foundation** | ✅ **Complete** (deployment pending credentials) — [details](#phase-0--implementation-progress) |
-| **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding) — [details](#phase-1--implementation-progress) |
+| **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding; axe 0 violations) — [details](#phase-1--implementation-progress) |
 | **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
 | **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
 | **6 — Demo mode & recruiter theatre** | ✅ **Complete** — [details](#phase-6--implementation-progress) |
-| **7 — Engineering credibility** | ⚠️ **Mostly complete** — 91 tests, validation layer, docs; CI/Playwright/Lighthouse unverified — [details](#phase-7--implementation-progress) |
+| **7 — Engineering credibility** | ⚠️ **Mostly complete** — 91 tests, validation layer, axe 0 violations, docs; CI/Playwright/Lighthouse unverified — [details](#phase-7--implementation-progress) |
 | **8 — Portfolio packaging & launch** | ⚠️ **Packaged, not launched** — README, screenshots, case study, licence done; deploy/Loom/topics blocked on credentials — [details](#phase-8--implementation-progress) |
 
 A one-sentence summary of the strategy:
@@ -648,7 +648,7 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 - [x] One auth shell, one `Field` primitive, one login flow.
 - [x] Zero duplicate `formatPrice` / `formatRelativeTime` implementations.
 - [x] Every interactive element has a visible `:focus-visible` style.
-- [ ] Axe/Lighthouse accessibility ≥ 95 on `/`, `/login`, `/admin/overview` — **unmeasured**, no browser in the build environment. Structural requirements are in place.
+- [x] Axe accessibility on `/`, `/login`, `/admin/overview` — **0 violations** measured 19 November 2026 in Chrome with real layout (`npm run a11y`), which is a stricter check than the ≥ 95 Lighthouse score the criterion was written against.
 
 #### Phase 1 — Implementation progress
 
@@ -1105,7 +1105,7 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 - [x] `npm test` passes locally from a clean checkout. **91 tests across 9 files.**
 - [ ] `npx playwright test` passes locally. **Blocked:** there is no Playwright suite, and installing it needs a registry fetch that this session was denied. The flows it would cover were exercised by hand instead (see the evidence table).
 - [x] Zero `any`, zero ESLint errors, zero unlabeled form fields. `grep -c ": any"` outside `src/prisma/generated` → 0; `eslint --max-warnings=0` clean; every input/select/textarea is either a `ui/field` primitive (which renders a `<label htmlFor>`) or wrapped in a `<label>`/carries `aria-label`.
-- [ ] Lighthouse a11y ≥ 95 on 5 sampled pages. **Blocked:** Lighthouse cannot be installed here (`npx` fetch denied). Recorded as unmeasured rather than assumed.
+- [x] Accessibility on 8 sampled pages. **Measured with axe-core rather than Lighthouse:** 0 violations across `/`, `/properties`, a listing detail page, `/login`, `/demo`, `/admin/overview`, `/admin/moderation` and `/agent/dashboard`, using the WCAG 2.0/2.1/2.2 A+AA and best-practice rule sets. Four real defects were found and fixed to get there (below). A Lighthouse *number* still cannot be produced in this environment, so the score is not claimed.
 - [x] A rate-limited enquiry returns a clear 429 message. Verified in the browser: the sixth submission in a row shows "Too many enquiries from this connection. Try again in about 60 minutes." as an inline `role="alert"`. Note it is a friendly form message, not an HTTP 429 — server actions return 200 with the state.
 - [x] Every server action has a guard **and** a Zod parse. Enforced by [`actions.test.ts`](../src/lib/validation/actions.test.ts), which fails if any exported action lacks either.
 - [x] `docs/architecture.md` explains the three-layer auth model and the JSON-attributes tradeoff.
@@ -1121,7 +1121,7 @@ The gap is the Lantern simulation: it budgets the whole critical payload against
 | 2a | Field errors rendered inline | ✅ | The three form sections take a `fieldErrors` prop; `ListingFields` composes them for both forms. Verified on create (5 fields flagged at once) and edit (description too short). |
 | 3 | Tests (30+ target) | ✅ 91 | `format` (15), `validation/listing` (12), `validation/enquiry` (9), `validation/admin+agent` (10), `listing/transitions` (10), `listing/filters` (13), `validation/actions` (15, the boundary audit), plus the pre-existing cache and JSON-LD suites. |
 | 4 | CI | ⚠️ | `npm test` step added between typecheck and build. Remote run unverified (no push, `gh` unauthenticated). |
-| 5 | Accessibility pass | ⚠️ | Structural work already in place (landmarks, one `h1` per page, labelled controls, `aria-live`/`role="status"` on async results, `motion-reduce` transitions, alt text everywhere). No Lighthouse audit could be run to score it. |
+| 5 | Accessibility pass | ✅ | Ran axe-core in real Chrome against 8 pages. It found four genuine defects, all fixed: footer links at `text-white/50` (about 3.5:1 on the forest background) and `text-gray-400` hints elsewhere were below 4.5:1; the footer's `<h4>` columns skipped a heading level; every admin page rendered its own `<main>` inside the layout's `<main>` (duplicate + nested landmarks); and the admin/agent layouts mounted a second sonner `Toaster`, producing two live regions with the same accessible name. After the fixes: **0 violations on all 8 pages**, reproducible with `npm run a11y` ([script](../scripts/a11y-audit.mjs)). |
 | 6 | Performance pass | ⚠️ | Three changes, measured: the hero's stats query moved behind `<Suspense>` so the `<h1>` (the LCP element) is no longer blocked by a cross-region round trip; aggregate stats cached 60 s under the listing prefix; listing-card images dropped to `quality={62}`. |
 | 7 | Security pass | ◻️ | Rate limiting, honeypot, CSP-ish headers via `proxy.ts`, scoped `remotePatterns` and server-only env already exist. Dependency audit not run. |
 | 8 | Docs for engineers | ✅ | [`architecture.md`](../docs/architecture.md), [`authorization.md`](../docs/authorization.md), [`decisions/0001-json-attributes.md`](../docs/decisions/0001-json-attributes.md), [`decisions/0002-audit-in-action.md`](../docs/decisions/0002-audit-in-action.md). |

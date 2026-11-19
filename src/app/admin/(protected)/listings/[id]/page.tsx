@@ -42,7 +42,7 @@ export default async function ListingDetailsPage({
   const attributes = listing.attributes as Record<string, unknown> | null;
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <Link
           href="/admin/listings"
@@ -151,7 +151,7 @@ export default async function ListingDetailsPage({
           </article>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 

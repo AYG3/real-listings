@@ -97,7 +97,7 @@ export function ModerationQueue({ listings }: { listings: ModerationListing[] })
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-xs font-semibold text-gray-400">
+                  <div className="flex h-full items-center justify-center text-xs font-semibold text-gray-600">
                     No photo
                   </div>
                 )}
