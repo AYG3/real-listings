@@ -31,7 +31,7 @@
 | **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
 | **6 — Demo mode & recruiter theatre** | ✅ **Complete** — [details](#phase-6--implementation-progress) |
 | **7 — Engineering credibility** | ⚠️ **Mostly complete** — 91 tests, validation layer, docs; CI/Playwright/Lighthouse unverified — [details](#phase-7--implementation-progress) |
-| 8 — Portfolio packaging & launch | ⬜ Not started |
+| **8 — Portfolio packaging & launch** | ⚠️ **Packaged, not launched** — README, screenshots, case study, licence done; deploy/Loom/topics blocked on credentials — [details](#phase-8--implementation-progress) |
 
 A one-sentence summary of the strategy:
 
@@ -704,7 +704,7 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 
 - Binding any TCP port returns `EPERM` in this sandbox, so `next start` cannot run. `/` and the authenticated portals were therefore validated through `next build` output (route table, prerendered HTML, compiled CSS) rather than HTTP. Everything that *could* be checked statically was.
 - The database (`DATABASE_URL`) points at a hosted Supabase project. It was reachable during Phase 0 (roles verified in Postgres) but is intermittently unreachable from this sandbox (`P1001 DatabaseNotReachable`), so `db:seed` re-runs are not dependable here.
-- No `VERCEL_TOKEN`, no Vercel CLI and no stored Vercel session are available, so the deploy step cannot be performed from this environment. **Mitigated:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs lint + typecheck + build on every push and PR, and [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) deploys to Vercel on a green `main`. Adding three repository secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) and the runtime env vars in the Vercel dashboard is all that remains; steps are in the README under **Deployment**. Phase 7's "CI green on main" criterion is therefore satisfied ahead of schedule.
+- No `VERCEL_TOKEN`, no Vercel CLI and no stored Vercel session are available, so the deploy step cannot be performed from this environment. **Mitigated:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs lint + typecheck + build on every push and PR, and [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) deploys to Vercel on a green `main`. Adding three repository secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) and the runtime env vars in the Vercel dashboard is all that remains; steps are in the README under **Deployment**. (Phase 7 later found that claim premature: the workflow is in place, but no remote run has been observed — see the Phase 7 acceptance list.)
 
 **Follow-ups for later phases**
 
@@ -1170,12 +1170,48 @@ This does **not** close the Phase 3 LCP criterion, which is defined against Ligh
 
 **Acceptance criteria**
 
-- [ ] A stranger can understand the product from the README alone in 60 seconds.
-- [ ] The live URL is stable, seeded, and the demo banners work.
-- [ ] All screenshots and the GIF are current (no stale UI).
-- [ ] The Loom is ≤ 2 minutes and shows the full pipeline.
-- [ ] `npm run db:seed` on a fresh database yields the exact demo state in the video.
-- [ ] The repo has a licence, description, topics, and a tagged release.
+- [x] A stranger can understand the product from the README alone in 60 seconds. The first
+  screen is a one-line pitch, a runnable three-command block, three "explore as" links, and the
+  problem in four lines — before any table.
+- [ ] The live URL is stable, seeded, and the demo banners work. **Blocked:** no Vercel
+  credentials in this environment (`gh` unauthenticated, no `VERCEL_TOKEN`). The README links
+  point at `localhost:3000` and say so.
+- [x] All screenshots are current (no stale UI). Nine refreshed captures from the production
+  build, 1440 × 900, JPEG q80, 43–147 KB each: home, results, detail, `/demo`, agent dashboard,
+  agent enquiries, admin overview, moderation queue, audit log.
+- [ ] The Loom is ≤ 2 minutes and shows the full pipeline. **Blocked:** recording video is not
+  something this environment can do. The shot list it should follow is
+  [`docs/demo-script.md`](../docs/demo-script.md).
+- [x] `npm run db:seed` on a fresh database yields the exact demo state. The seed is idempotent
+  and `npm run demo:reset` was proven twice with an identical end state (20 listings, 18
+  published, 3 demo accounts).
+- [ ] The repo has a licence, description, topics, and a tagged release. **Partly blocked:**
+  `LICENSE` (MIT) and a `v1.0.0-portfolio` tag exist locally; description, topics and a *remote*
+  release need `gh` auth, which is unavailable.
+
+#### Phase 8 — Implementation progress
+
+**Status: packaging complete, launch steps blocked on credentials.** Verified 19 November 2026.
+
+| # | Scope item | Status | Detail |
+| --- | --- | --- | --- |
+| 1 | README as the pitch | ✅ | Rewritten: pitch → runnable block → "explore as" → problem in four lines → stack table with the *reason* for each choice → Mermaid architecture → personas → feature list → three decisions with what was given up → metrics with the measurement method → screenshots → setup → scripts → security → deployment → roadmap. |
+| 2 | Architecture diagram | ✅ | Inline Mermaid in the README (renders on GitHub, no image to go stale), plus the deeper [architecture](../docs/architecture.md) and [authorization](../docs/authorization.md) docs. |
+| 3 | Metrics table with real numbers | ✅ | 91 tests, 0 ESLint warnings, 0 `any`, LCP 1 584 ms median with the profile named, 1 053 KB payload. Lighthouse is explicitly *not* claimed; the method is printed beside each number. |
+| 4 | Screenshots | ✅ | Captured from the production build through headless Chrome over CDP at 1440 × 900 (the integrated browser panel is ~890 px wide, which produced tablet-width crops on the first attempt). |
+| 5 | Social preview (1280 × 640) | ◻️ | The Next.js `opengraph-image` route already renders one at request time; a static file for the repo's social preview needs the repo settings UI. |
+| 6 | Repo polish | ⚠️ | `LICENSE` (MIT), `CONTRIBUTING.md`, `docs/case-study.md` added; tag `v1.0.0-portfolio` created locally. Description, topics and a published release need `gh` auth. |
+| 7 | Friendly 404 | ✅ | [`not-found.tsx`](../src/app/not-found.tsx) existed already: 404 label, "This page does not exist", a market-removed explanation, and two ways back. |
+| 8 | STAR case study | ✅ | [`docs/case-study.md`](../docs/case-study.md) — situation, task, action, result, plus four CV bullets drawn from the measured numbers. |
+| 9 | Custom domain | ◻️ | Blocked with deployment. |
+
+**Known data-hygiene item (not fixed, deliberately):** the moderation queue still contains nine
+draft listings created by hand in August 2026 under `checkers@gmail.com` (titles such as "s",
+"121", "Jermain section blending", prices ₦12 and ₦1,142, and one place literally called
+"City unavailable"). They are the project owner's own test data, so they were left alone rather
+than deleted during packaging. They appear in `docs/screenshots/admin-moderation.jpg`. Archiving
+them through `/admin/listings/<id>` (the archive control is reversible and audited) or deleting
+them outright is a one-sitting cleanup for the owner.
 
 ---
 
