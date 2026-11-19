@@ -29,6 +29,7 @@ import {
   toNumber,
 } from "@/lib/format";
 import { getSimilarListings } from "@/lib/listing/queries";
+import { cachedByKey } from "@/lib/listing/public-cache";
 import { serializeJsonLd } from "@/lib/listing/json-ld";
 import { EnquiryForm } from "./_components/enquiry-form";
 import { ListingGallery } from "./_components/listing-gallery";
@@ -36,10 +37,12 @@ import { SaveButton } from "./_components/save-button";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-// One relation `include` is three sequential round trips on Prisma's engine, and
-// each trip to the database is ~250ms away. Fetching the relations by slug in
-// parallel keeps the page at one round trip instead of three.
-const getListing = cache(async (slug: string) => {
+// Two costs stack up here: a relation `include` is three sequential round trips
+// on Prisma's engine, and each trip to the database is ~250ms away — so the
+// relations are fetched in parallel (one round trip), and the result is kept for
+// a short TTL because a published listing is public, read-mostly data. Every
+// listing mutation clears the cache, so read-your-own-writes still holds.
+async function fetchListing(slug: string) {
   const where = { slug, status: "PUBLISHED" as const };
   const [listing, images, agent] = await Promise.all([
     prisma.listing.findFirst({ where }),
@@ -64,7 +67,12 @@ const getListing = cache(async (slug: string) => {
   if (!listing || !agent) return null;
 
   return { ...listing, images, agent };
-});
+}
+
+/** Per-request dedupe on top of the TTL cache (metadata + page share it). */
+const getListing = cache((slug: string) =>
+  cachedByKey(`listing:${slug}`, () => fetchListing(slug)),
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

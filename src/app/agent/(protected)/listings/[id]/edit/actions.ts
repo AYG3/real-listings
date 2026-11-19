@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
+import { clearPublicCache } from "@/lib/listing/public-cache";
 
 export type UpdateListingState = {
   status: "idle" | "error";
@@ -199,6 +200,7 @@ export async function updateListing(
     }
   }
 
+  clearPublicCache("listing:");
   revalidatePath("/agent/listings");
   revalidatePath("/agent/dashboard");
   revalidatePath("/properties");

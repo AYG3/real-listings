@@ -26,7 +26,7 @@
 | **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding) — [details](#phase-1--implementation-progress) |
 | **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
 | **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
-| **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 2.1 s throttled) — [details](#phase-3--implementation-progress) |
+| **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | 5 — Real admin control tower | ⬜ Not started |
 | 6 — Demo mode & recruiter theatre | ⬜ Not started |
@@ -652,7 +652,7 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 
 #### Phase 1 — Implementation progress
 
-**Status: complete.** Verified 18 November 2026.
+**Status: complete, one criterion open** (LCP under Lighthouse). Verified 18 November 2026.
 
 | # | Scope item | Status | Evidence |
 | --- | --- | --- | --- |
@@ -812,11 +812,11 @@ Create now redirects to `/agent/listings?created=1` with a "submitted for review
 - [x] Saving while logged out persists locally and merges after login; saving while logged in writes `SavedListing`.
 - [x] Gallery is fully keyboard operable; Escape closes the lightbox; focus returns to the trigger.
 - [x] OG preview renders the cover image and correct price when the URL is pasted into LinkedIn/X. *(Metadata verified in the rendered HTML; external preview unrendered here.)*
-- [x] LCP on a detail page < 2.5 s on mobile. Measured **2.10–2.37 s** under an emulated Lighthouse mobile profile (1.6 Mbps down / 750 kbps up / 150 ms RTT, 4× CPU, 360×640 @ DPR 2.625, cold cache) on the production build, via a buffered `PerformanceObserver`; CLS 0, FCP 0.71 s. Unthrottled LCP is 1.69 s. See [LCP work](#phase-3--lcp-and-render-latency). *(Lighthouse CLI was blocked by the session's approval gate, so there is no Lighthouse score to go with these numbers — the throttling profile and the metric definitions are the same ones it uses, but the aggregation is not.)*
+- [ ] LCP on a detail page < 2.5 s on mobile. **Not met under Lighthouse's own simulation**: three consecutive mobile runs on the production build reported **2.97 s / 2.97 s / 3.02 s** LCP (performance score 94–95, FCP ~0.9 s, CLS 0, TBT 30–40 ms). Wall-clock measurements are kinder — 2.10–2.37 s under CDP 4G+4× CPU emulation, and the in-trace LCP subparts sum to ~1.0 s after FCP — but Lighthouse scores the simulated number, so the criterion stays unticked. Cause and next step are recorded in [LCP work](#phase-3--lcp-and-render-latency): the LCP element is the hero image inside a 460 KiB page whose simulated download alone budgets ~2.3 s at 1.6 Mbps.
 
 #### Phase 3 — Implementation progress
 
-**Status: complete.** Verified 18 November 2026.
+**Status: complete, one criterion open** (LCP under Lighthouse). Verified 18 November 2026.
 
 | # | Scope item | Status | Evidence |
 | --- | --- | --- | --- |
@@ -877,23 +877,33 @@ Query batching on the detail route, which is what moved the render:
 - `cardInclude` no longer includes `agent` — the card never rendered it, so every listing grid was paying a round trip for unused data.
 - `getListing` and `getSession` (independent) are fetched together; only the saved-listing flag is awaited before paint, and similar listings stream.
 
-Measurements are against the production build (`next start`) with the browser talking to Supabase over the public internet.
+Measurements are against the production build (`next start`) with the browser talking to Supabase over the public internet. Three different methods disagree, so all three are listed:
 
-| Metric | Before | Unthrottled | Mobile + 4G throttle + 4× CPU |
-| --- | --- | --- | --- |
-| Detail page HTML complete | 3.5 s cold / 1.1–1.7 s warm | 1.54–1.80 s | — |
-| FCP | 1.85 s | 0.73 s | 0.71–0.85 s |
-| LCP | 3.64 s | 1.69 s | **2.10–2.37 s** |
-| CLS | — | 0 | 0 |
-| `/properties` render | ~1.0 s | 0.34 s | — |
+| Method | LCP | Notes |
+| --- | --- | --- |
+| Lighthouse (mobile, default simulated throttling) | **2.97–3.02 s** | Performance 94–95, FCP ~0.9 s, CLS 0, TBT 30–40 ms. This is the number that counts against the criterion. |
+| CDP wall-clock emulation (1.6 Mbps / 150 ms RTT / 4× CPU, 360×640 @ DPR 2.625, cold cache) | 2.10–2.37 s | Real timings, no Lantern model. |
+| In-trace LCP subparts from the Lighthouse run itself | ~1.03 s | TTFB 15 ms + resource load delay 25 ms + load 9 ms + render delay 72 ms after an FCP of 906 ms. |
 
-The throttled column is the one that answers the plan's criterion: it emulates Lighthouse's mobile profile through CDP (`Network.emulateNetworkConditions` 1.6 Mbps/750 kbps/150 ms RTT, `Emulation.setCPUThrottlingRate` 4, 360×640 at DPR 2.625, cold cache), measured with a buffered `PerformanceObserver`. Lighthouse CLI itself was blocked by the session's approval gate, so no Lighthouse score accompanies this — only the LCP/CLS/FCP numbers, which are the same signals. Two consecutive samples gave 2.37 s and 2.10 s; the spread comes from which `srcset` candidate the browser picks (the 1920w hero is 77 KB, the 750w one 32 KB).
+The gap is the Lantern simulation: it budgets the whole critical payload against 1.6 Mbps. The page weighs **460 KiB across 44 requests**, so the model alone accounts for ~2.3 s. Lowering the LCP element's byte count does not move that number much; cutting critical JS does. That is Phase 7 work (bundle budget, deferring non-critical client components) and is the reason this criterion is still open.
+
+| Metric | Before | Unthrottled | Mobile + 4G throttle + 4× CPU | Lighthouse mobile |
+| --- | --- | --- | --- | --- |
+| Detail page HTML complete | 3.5 s cold / 1.1–1.7 s warm | 0.9 s warm, 0.01 s cached | — | — |
+| FCP | 1.85 s | 0.73 s | 0.71–0.85 s | 0.91 s |
+| LCP | 3.64 s | 1.69 s | 2.10–2.37 s | 2.97–3.02 s |
+| CLS | — | 0 | 0 | 0 |
+| `/properties` render | ~1.0 s | 0.34 s | — | — |
+
+**What is left on the table:** the fix for the remaining gap is not another micro-optimisation of this page. Either the deployment moves next to the database and behind a CDN (removing the 1.6 Mbps-against-460 KiB problem), or the route gets a static shell so the hero image is in the first document byte. Both are Phase 7 items; the revalidation story below is already in place for the second.
+
+**Caching, and why not `unstable_cache`:** the listing read is cached for 15 s in-process ([`public-cache.ts`](../src/lib/listing/public-cache.ts)) and cleared by every listing mutation, so repeat views render in ~10 ms instead of ~0.9 s. The framework's `unstable_cache` was tried first and rejected: without Cache Components its `revalidate` window was not honoured, and an entry written while a listing was published kept being served after it returned to draft — a moderation leak rather than a performance trade-off. `updateTag`/`revalidateTag` (both require Cache Components to tag non-`fetch` data) were therefore also out. The TTL bounds staleness to 15 s for any path that misses an invalidation, and `public-cache.test.ts` locks that behaviour.
 
 **Cover photos are served locally — verified.** On the live detail page the hero's `img.currentSrc` is `/_next/image?url=%2Fimages%2Flistings%2Fphoto-1564013799919-ab600027ffc6.jpg&w=1920&q=62`, i.e. the vendored file, not an Unsplash URL. The vendored sources are 1200×800.
 
 **What is left on the table:** the residual 1.5 s render is the TLS handshake to the pooler after an idle gap (~0.7 s) plus two dependent query batches. The structural fixes — co-locating the app with the database region, or caching public listing reads behind a tag — are logged in the risk table rather than bolted on here.
 
-**Test coverage added:** `src/lib/listing/json-ld.test.ts` (vitest) locks the escaping behaviour that the live hostile-title check could not be run for — `npm test`.
+**Test coverage added:** `src/lib/listing/json-ld.test.ts` locks the escaping behaviour (the hostile-title live check was blocked), and `src/lib/listing/public-cache.test.ts` locks the TTL and prefix-invalidation behaviour of the listing cache — `npm test`, 6 tests.
 
 ---
 

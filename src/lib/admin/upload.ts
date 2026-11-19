@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "../prisma";
+import { clearPublicCache } from "@/lib/listing/public-cache";
 
 const listingStatuses = [
   "DRAFT",
@@ -111,6 +112,7 @@ export async function createListing(
 
     await attachListingImages(listing.id, images);
 
+    clearPublicCache("listing:");
     revalidatePath("/admin/listings");
     revalidatePath("/properties");
     revalidatePath("/");

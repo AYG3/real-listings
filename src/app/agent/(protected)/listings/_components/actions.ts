@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAgent } from "@/lib/auth/guards";
 import { attachListingImages, readListingImages } from "@/lib/listing/images";
 import prisma from "@/lib/prisma";
+import { clearPublicCache } from "@/lib/listing/public-cache";
 
 function getString(formData: FormData, key: string, fallback = "") {
   const value = formData.get(key);
@@ -83,6 +84,7 @@ export async function createListing(formData: FormData) {
 
   await attachListingImages(listing.id, readListingImages(formData));
 
+  clearPublicCache("listing:");
   revalidatePath("/agent/listings");
   revalidatePath("/properties");
   revalidatePath("/agents");

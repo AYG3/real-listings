@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
+import { clearPublicCache } from "@/lib/listing/public-cache";
 
 export type ListingActionResult = {
   status: "success" | "error";
@@ -102,7 +103,8 @@ export async function updateListingStatus(
     },
   });
 
-  // The public site, the directory and both agent surfaces read this row.
+  // The cached public page, the directory and both agent surfaces read this row.
+  clearPublicCache("listing:");
   revalidatePath("/properties");
   revalidatePath(`/properties/${listing.slug}`);
   revalidatePath("/agents");
