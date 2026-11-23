@@ -1,6 +1,7 @@
 import HeroSection from "./components/HeroSection";
+import TrustStrip from "./components/TrustStrip";
 import FeaturedPropertiesSection from "./components/FeaturedPropertiesSection";
-import ServicesSection from "./components/ServicesSection";
+import HowItWorksSection from "./components/HowItWorksSection";
 import TestimonialsSection from "./components/TestimonialsSection";
 import CTASection from "./components/CTASection";
 
@@ -12,8 +13,9 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <TrustStrip />
       <FeaturedPropertiesSection />
-      <ServicesSection />
+      <HowItWorksSection />
       <TestimonialsSection />
       <CTASection />
     </>

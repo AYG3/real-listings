@@ -106,7 +106,7 @@ export default async function AgentDashboardPage() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Agent
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">

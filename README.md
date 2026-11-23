@@ -142,19 +142,24 @@ Full detail: [docs/architecture.md](docs/architecture.md) and
 
 ## Quality gates
 
-- **91 unit tests** (`npm test`) over the validation schemas, formatters, filter parsing, status
-  transitions, the public cache, and a boundary audit that fails when a server action loses its
-  guard or its schema.
-- `npm run lint` (0 warnings), `npm run typecheck`, and a production build, all clean and all run
-  by CI in that order.
+- **106 unit tests** (`npm test`) over the validation schemas, formatters, filter parsing, status
+  transitions, the public cache, demo masking, and a boundary audit that fails when a server action
+  loses its guard or its schema.
+- `npm run lint` (0 warnings), `npm run typecheck`, and a production build, all clean.
+- `npm run a11y` — axe-core in a real Chrome against 8 routes, **0 violations** at 1440×900 and
+  375×812 (`VIEWPORT_WIDTH=375 npm run a11y` for the mobile pass). Every page is audited twice:
+  once at rest, and once with its first dropdown open, since a closed select hides the widget.
+- **Lighthouse mobile** on a production build: `/` scores **99 performance / 100 accessibility**,
+  LCP **0.9 s**, CLS **0**; `/properties` scores the same. Reproduce with
+  `npm run build && PORT=3100 npm start`, then
+  `npx lighthouse http://localhost:3100 --only-categories=performance,accessibility`.
 - Manual browser verification of every flow, recorded with its evidence in the
-  [readiness plan](plans/01-portfolio-readiness-plan.md).
+  [readiness plans](plans/).
 
 ## In progress
 
 - Buyer `/account` pages for saved listings and enquiries.
 - Playwright E2E for the five critical paths (the flows are verified by hand today).
-- A Lighthouse a11y score on five sampled pages — structurally covered, not yet measured.
 
 ## Demo mode
 
@@ -236,6 +241,10 @@ rules that actually fail in practice, on the pages that matter, with layout and 
 | --- | --- |
 | ![Moderation queue](docs/screenshots/admin-moderation.jpg) | ![Demo entry](docs/screenshots/demo.jpg) |
 
+| Admin on a phone |  |
+| --- | --- |
+| ![Admin drawer on a phone](docs/screenshots/admin-mobile.jpg) | One 56px app bar, a modal drawer, and an identity footer with sign-out. No horizontal scrolling from 320px up. |
+
 ## Getting started
 
 ```bash
@@ -270,6 +279,25 @@ All variables are documented in [`.env.example`](.env.example). The minimum need
 
 > **Keep the client pool short-lived.** The pool in [`src/lib/prisma.ts`](src/lib/prisma.ts) caps at 5 connections and retires idle ones after 10 seconds. Do not pin `min` connections or hold sockets idle for minutes: the pooler closes what it considers idle, and a connection it closed still looks healthy to `pg` until the next query fails with `P1017 ConnectionClosed`. The cost of reconnecting is real (~0.7 s TLS handshake from a different region), which is why the read paths batch their queries instead of spreading them over several round trips — see [the Phase 3 latency notes](plans/01-portfolio-readiness-plan.md#phase-3--lcp-and-render-latency).
 
+### Troubleshooting sign-in
+
+`npm run dev` runs `scripts/check-auth-env.mjs` first and prints a warning when the auth origin and the dev port disagree. The three values below must describe the same origin:
+
+| Where | Value |
+| --- | --- |
+| `.env.local` | `BETTER_AUTH_URL="http://localhost:3000"` |
+| Google Console → Authorized JavaScript origins | `http://localhost:3000` |
+| Google Console → Authorized redirect URIs | `http://localhost:3000/api/auth/callback/google` |
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Google returns to `localhost:3001` (or any port you are not running) and the browser says **page can't be reached** | `BETTER_AUTH_URL` names a different port than `next dev` binds to. Better Auth builds `redirect_uri` from it. | Set `BETTER_AUTH_URL` to the port printed by `npm run dev` (currently pinned to `3000`) and restart the server. `.env.local` changes are not hot-reloaded. |
+| Google says **redirect_uri_mismatch** | The console entry and the computed URI differ (trailing slash, `http` vs `https`, `127.0.0.1` vs `localhost`, or an extra port). | Add the exact URI from the error message, or correct `BETTER_AUTH_URL`. `127.0.0.1` and `localhost` are distinct origins. |
+| The Google button does nothing | `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are missing, so the provider is not registered. | Set both, or sign in with email and password. A failure now surfaces as a toast instead of a silent no-op. |
+| Sign-in works, then the session disappears on restart | `BETTER_AUTH_SECRET` is missing, so cookies cannot be verified after a rebuild. | Generate one with `openssl rand -base64 32`. |
+
+`.env.local` wins over `.env`; both are read by Next.js, and `scripts/check-auth-env.mjs` reads them in the same order. A stale `BETTER_AUTH_URL` in either file reproduces the bug, so check both.
+
 ### Seeded accounts (local only)
 
 | Role | Email | Password |
@@ -288,13 +316,13 @@ Sign in at `/login`. A deep link to a portal (`/admin/overview`, `/agent/dashboa
 
 | Script | Purpose |
 | --- | --- |
-| `npm run dev` | Start the development server. |
+| `npm run dev` | Check the auth env, then start the development server on <http://localhost:3000> (the port is pinned so OAuth callbacks match `BETTER_AUTH_URL`). |
 | `npm run build` | Generate the Prisma client and build for production. |
 | `npm start` | Run the production build. |
 | `npm run lint` | ESLint (Next.js core-web-vitals + TypeScript rules). |
 | `npm run typecheck` | `tsc --noEmit`. |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`). |
-| `npm run a11y` | axe-core audit of 8 pages against a running build; exits non-zero on a violation. Needs Chrome and `BASE_URL`. |
+| `npm run a11y` | axe-core audit of 8 pages against a running build, each also audited with its first dropdown open; exits non-zero on a violation. Needs Chrome and `BASE_URL`. |
 | `npm run db:migrate` | Create and apply a migration in development. |
 | `npm run db:seed` | Seed the ADMIN / AGENT / BUYER accounts (idempotent). |
 | `npm run db:studio` | Open Prisma Studio. |

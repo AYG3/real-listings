@@ -19,7 +19,8 @@ export async function DemoBanner() {
     >
       <span className="inline-flex flex-wrap items-center justify-center gap-2">
         <Lock className="h-4 w-4" aria-hidden="true" />
-        Read-only demo — everything is open, nothing can be changed.{" "}
+        Read-only demo — every workflow is live, nothing can be changed.
+        Personal details are masked.{" "}
         <Link href="/demo" className="underline underline-offset-2">
           Switch role
         </Link>

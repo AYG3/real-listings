@@ -1,10 +1,15 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { getAdminUsers } from "@/lib/admin/moderation";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { redactAdminUser } from "@/lib/demo/redact";
 import { UserTable } from "./_components/user-table";
 
 export default async function AdminUsersPage() {
   const session = await requireAdmin();
-  const users = await getAdminUsers(session.user.id);
+  const redact = isDemoSessionUser(session.user);
+  const users = (await getAdminUsers(session.user.id)).map((user) =>
+    redact ? redactAdminUser(user) : user,
+  );
 
   const counts = {
     total: users.length,
@@ -14,10 +19,10 @@ export default async function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+          <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
             Admin
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -49,7 +54,7 @@ export default async function AdminUsersPage() {
         </section>
 
         <section className="mt-8">
-          <UserTable users={users} />
+          <UserTable users={users} redacted={redact} />
         </section>
       </div>
     </div>

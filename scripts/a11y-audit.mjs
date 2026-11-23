@@ -3,6 +3,7 @@
  *
  *   npm run a11y                       # audits http://localhost:3000
  *   BASE_URL=http://localhost:3001 npm run a11y
+ *   VIEWPORT_WIDTH=375 npm run a11y    # mobile pass; default is 1440×900
  *
  * Needs Chrome; set CHROME_PATH if it is not at the default macOS location.
  * The admin/agent pages need the seeded admin account, so they are skipped when
@@ -20,6 +21,8 @@ const require = createRequire(import.meta.url);
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const PORT = Number(process.env.CDP_PORT ?? 9226);
+const WIDTH = Number(process.env.VIEWPORT_WIDTH ?? 1440);
+const HEIGHT = Number(process.env.VIEWPORT_HEIGHT ?? 900);
 const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 const PUBLIC_PAGES = ["/", "/properties", "/properties/wuse-2-3-bedroom-terrace", "/login", "/demo"];
@@ -48,7 +51,7 @@ async function connect() {
   throw new Error(`Chrome did not expose CDP on port ${PORT}`);
 }
 
-const socketUrl = await connect();
+await connect();
 const target = await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: "PUT" }).then((r) => r.json());
 const socket = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise((resolve, reject) => {
@@ -95,18 +98,31 @@ const evaluate = async (expression) => {
 
 await send("Page.enable");
 await send("Runtime.enable");
-await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+await send("Emulation.setDeviceMetricsOverride", {
+  width: WIDTH,
+  height: HEIGHT,
+  deviceScaleFactor: 1,
+  mobile: WIDTH < 700,
+});
+console.log(`Viewport ${WIDTH}x${HEIGHT}\n`);
 
 const visit = async (path) => {
   await send("Page.navigate", { url: BASE + path });
   await waitForEvent("Page.loadEventFired");
-  await sleep(1500);
+
+  // Streamed routes can paint the landmark before the page content lands;
+  // wait for <main> instead of trusting the load event alone.
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    if (await evaluate(`Boolean(document.querySelector("main"))`)) break;
+    await sleep(150);
+  }
+
+  await sleep(600);
 };
 
-const audit = async (path) => {
-  await visit(path);
+const runAxe = async () => {
   await evaluate(AXE);
-  const result = await evaluate(`axe.run(document, { runOnly: { type: "tag", values: ${JSON.stringify(TAGS)} } })
+  return evaluate(`axe.run(document, { runOnly: { type: "tag", values: ${JSON.stringify(TAGS)} } })
     .then((report) => ({
       violations: report.violations.map((violation) => ({
         id: violation.id,
@@ -117,10 +133,13 @@ const audit = async (path) => {
       incomplete: report.incomplete.length,
       passes: report.passes.length,
     }))`);
+};
+
+const report = (label, result) => {
   const count = result.violations.reduce((sum, violation) => sum + violation.nodes.length, 0);
 
   console.log(
-    `${result.violations.length === 0 ? "PASS" : "FAIL"}  ${path.padEnd(44)} ` +
+    `${result.violations.length === 0 ? "PASS" : "FAIL"}  ${label.padEnd(44)} ` +
       `${result.violations.length} rules, ${count} nodes, ${result.passes} passes`,
   );
 
@@ -131,6 +150,29 @@ const audit = async (path) => {
   }
 
   return result.violations.length;
+};
+
+// SelectField only renders its listbox once opened, so the resting page audit
+// never sees the popup. Open the first one and audit that state too.
+const openFirstCombobox = () =>
+  evaluate(`(() => {
+    const trigger = document.querySelector('[role="combobox"][aria-expanded]');
+    if (!trigger) return false;
+    trigger.click();
+    return true;
+  })()`);
+
+const audit = async (path) => {
+  await visit(path);
+  let failures = report(path, await runAxe());
+
+  if (await openFirstCombobox()) {
+    await sleep(300);
+    const options = await evaluate(`document.querySelectorAll('[role="option"]').length`);
+    if (options > 0) failures += report(`${path} (dropdown open)`, await runAxe());
+  }
+
+  return failures;
 };
 
 let failures = 0;

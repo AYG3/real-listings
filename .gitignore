@@ -44,3 +44,9 @@ next-env.d.ts
 /src/prisma/generated
 
 src/app/agents/auth/login/LoginForm copy
+plans/01-portfolio-readiness-plan.md
+plans/02-admin-ux-auth-trust-plan.md
+docs/*
+docs/**
+docs/screenshots/home.jpg
+docs/screenshots/*

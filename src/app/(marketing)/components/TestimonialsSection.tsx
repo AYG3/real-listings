@@ -24,7 +24,7 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="bg-white py-16 lg:py-20">
+    <section className="bg-ivory-50 py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <h2 className="text-h2 font-bold text-ink-900">
@@ -32,7 +32,7 @@ export default function TestimonialsSection() {
           </h2>
           <p className="mt-2 text-sm text-muted-500">
             Feedback from people using the platform to buy, sell, and let
-            property.
+            property. Illustrative for this demo build.
           </p>
         </div>
 

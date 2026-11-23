@@ -56,11 +56,11 @@ export default async function ListingsPage() {
   const flaggedCount = listings.filter((l) => l.status === "ARCHIVED").length;
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Admin
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">

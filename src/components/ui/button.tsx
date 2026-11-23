@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "gold";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "gold" | "onDark";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -14,6 +14,7 @@ const variants: Record<Variant, string> = {
   ghost: "text-ink-700 hover:bg-ivory-100",
   danger: "border border-danger/30 bg-white text-danger hover:bg-danger/5",
   gold: "bg-gold-500 text-forest-900 hover:bg-gold-600 hover:text-white",
+  onDark: "border border-white/30 bg-transparent text-white hover:bg-white/10",
 };
 
 const sizes: Record<Size, string> = {

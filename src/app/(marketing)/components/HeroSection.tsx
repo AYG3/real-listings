@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Search } from "lucide-react";
+import { ArrowRight, Search, ShieldCheck } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
+import { SelectField } from "@/components/ui/select";
+import { TextField } from "@/components/ui/text-field";
 import { getPublicStats } from "@/lib/listing/queries";
 
 const BUDGET_STEPS = [
@@ -13,11 +15,6 @@ const BUDGET_STEPS = [
   { value: "200000000", label: "Up to ₦200m" },
   { value: "500000000", label: "Up to ₦500m" },
 ];
-
-const fieldClass =
-  "h-11 w-full rounded-control border border-ink-900/15 bg-white px-3 text-sm text-ink-900 placeholder:text-muted-500/70 focus:border-forest-700 focus:outline-none";
-const labelClass =
-  "mb-1.5 block text-[11px] font-bold uppercase tracking-[0.12em] text-muted-500";
 
 /**
  * The stats line is the only part of the hero that needs the database, so it
@@ -42,11 +39,12 @@ async function HeroStats() {
 export default function HeroSection() {
   return (
     <section className="relative isolate overflow-hidden bg-forest-900">
+      {/* A CSS gradient instead of a background photo: it paints with the
+          stylesheet, so it never becomes a late LCP candidate on slow links. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-[url('/images/auth-bg.svg')] bg-cover bg-center opacity-70"
+        className="absolute inset-0 bg-[radial-gradient(120%_120%_at_20%_0%,var(--color-forest-600)_0%,var(--color-forest-800)_55%,var(--color-forest-900)_100%)]"
       />
-      <div aria-hidden className="absolute inset-0 bg-forest-900/75" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="max-w-2xl">
@@ -60,6 +58,15 @@ export default function HeroSection() {
             Every listing is submitted by an agent and reviewed before it goes
             live. Search by location, price, and property type.
           </p>
+          <p className="mt-5">
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white"
+            >
+              New here? Take the two-minute demo
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </p>
         </div>
 
         {/* Plain GET form: works without JavaScript, and every result is a shareable URL. */}
@@ -69,73 +76,59 @@ export default function HeroSection() {
           className="mt-10 rounded-card border border-white/15 bg-ivory-50 p-4 shadow-lift sm:p-5"
         >
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <div className="sm:col-span-2">
-              <label htmlFor="hero-q" className={labelClass}>
-                Location or keyword
-              </label>
-              <input
-                id="hero-q"
-                name="q"
-                type="search"
-                placeholder="Lekki, Abuja, Gwarinpa…"
-                className={fieldClass}
-              />
-            </div>
+            <TextField
+              id="hero-q"
+              name="q"
+              type="search"
+              label="Location or keyword"
+              placeholder="Lekki, Abuja, Gwarinpa…"
+              wrapperClassName="sm:col-span-2"
+            />
 
-            <div>
-              <label htmlFor="hero-intent" className={labelClass}>
-                Purpose
-              </label>
-              <select id="hero-intent" name="intent" className={fieldClass}>
-                <option value="">Buy or rent</option>
-                <option value="sale">For sale</option>
-                <option value="rent">For rent</option>
-              </select>
-            </div>
+            <SelectField id="hero-intent" name="intent" label="Purpose">
+              <option value="">Buy or rent</option>
+              <option value="sale">For sale</option>
+              <option value="rent">For rent</option>
+            </SelectField>
 
-            <div>
-              <label htmlFor="hero-type" className={labelClass}>
-                Property type
-              </label>
-              <select id="hero-type" name="type" className={fieldClass}>
-                <option value="">Any type</option>
-                <option value="house">House</option>
-                <option value="land">Land</option>
-              </select>
-            </div>
+            <SelectField id="hero-type" name="type" label="Property type">
+              <option value="">Any type</option>
+              <option value="house">House</option>
+              <option value="land">Land</option>
+            </SelectField>
 
-            <div>
-              <label htmlFor="hero-max-price" className={labelClass}>
-                Budget
-              </label>
-              <select id="hero-max-price" name="maxPrice" className={fieldClass}>
-                {BUDGET_STEPS.map((step) => (
-                  <option key={step.label} value={step.value}>
-                    {step.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectField
+              id="hero-max-price"
+              name="maxPrice"
+              label="Budget"
+              wrapperClassName="sm:col-span-2 lg:col-span-1"
+            >
+              {BUDGET_STEPS.map((step) => (
+                <option key={step.label} value={step.value}>
+                  {step.label}
+                </option>
+              ))}
+            </SelectField>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Suspense
-              fallback={
-                <p className="text-xs font-medium text-muted-500">
-                  Loading live inventory…
-                </p>
-              }
-            >
-              <HeroStats />
-            </Suspense>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/demo"
-                className={buttonStyles({ variant: "secondary", size: "md" })}
+          <div className="mt-4 flex flex-col gap-4 border-t border-ink-900/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest-800">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                Every listing is reviewed before it goes live.
+              </p>
+              <Suspense
+                fallback={
+                  <p className="text-xs font-medium text-muted-500">
+                    Loading live inventory…
+                  </p>
+                }
               >
-                Take the demo
-              </Link>
+                <HeroStats />
+              </Suspense>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/properties"
                 className={buttonStyles({ variant: "secondary", size: "md" })}
@@ -143,7 +136,7 @@ export default function HeroSection() {
                 Browse all
               </Link>
               <button type="submit" className={buttonStyles({ size: "md" })}>
-                <Search className="h-4 w-4" aria-hidden />
+                <Search className="h-4 w-4" aria-hidden="true" />
                 Search
               </button>
             </div>

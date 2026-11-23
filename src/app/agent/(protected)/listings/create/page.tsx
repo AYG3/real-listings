@@ -7,7 +7,7 @@ export default async function CreateListingPage() {
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+          <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
             Agent
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">

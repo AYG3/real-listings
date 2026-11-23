@@ -25,12 +25,12 @@
 | **0 — Stabilize the foundation** | ✅ **Complete** (deployment pending credentials) — [details](#phase-0--implementation-progress) |
 | **1 — One brand, one design system** | ✅ **Complete** (portal token pass outstanding; axe 0 violations) — [details](#phase-1--implementation-progress) |
 | **Step 1 — Integrity repair** | ✅ **Complete** — seed restored, images persisted, moderation enforced — [details](#step-1--integrity-repair) |
-| **2 — Public discovery** | ✅ **Complete** (Lighthouse unmeasured) — [details](#phase-2--implementation-progress) |
-| **3 — Listing detail + enquiry loop** | ✅ **Complete** (LCP 3.0 s on Lighthouse — criterion open) — [details](#phase-3--implementation-progress) |
+| **2 — Public discovery** | ✅ **Complete** (Lighthouse now measured: 99/100) — [details](#phase-2--implementation-progress) |
+| **3 — Listing detail + enquiry loop** | ✅ **Complete** (hero LCP now 0.9 s) — [details](#phase-3--implementation-progress) |
 | **4 — Real agent workspace** | ✅ **Complete** (document upload + asset deletion deferred to Phase 5) — [details](#phase-4--implementation-progress) |
 | **5 — Real admin control tower** | ✅ **Complete** — [details](#phase-5--implementation-progress) |
 | **6 — Demo mode & recruiter theatre** | ✅ **Complete** — [details](#phase-6--implementation-progress) |
-| **7 — Engineering credibility** | ⚠️ **Mostly complete** — 91 tests, validation layer, axe 0 violations, docs; CI/Playwright/Lighthouse unverified — [details](#phase-7--implementation-progress) |
+| **7 — Engineering credibility** | ⚠️ **Mostly complete** — 106 tests, validation layer, axe 0 violations, Lighthouse measured; CI/Playwright still unverified — [details](#phase-7--implementation-progress) |
 | **8 — Portfolio packaging & launch** | ⚠️ **Packaged, not launched** — README, screenshots, case study, licence done; deploy/Loom/topics blocked on credentials — [details](#phase-8--implementation-progress) |
 
 A one-sentence summary of the strategy:
@@ -323,6 +323,17 @@ Measure these, publish them, and put them in the README.
 | Pages with a designed loading + error + empty state | 100% of data routes |
 | Server actions with explicit auth + validation | 100% |
 | Dead/inert interactive elements | 0 |
+
+> **Measured 19 November 2026** — production build (`next build` + `next start`), Lighthouse mobile emulation (Moto G / slow 4G):
+>
+> | Page | Performance | Accessibility | LCP | CLS | TBT |
+> | --- | --- | --- | --- | --- | --- |
+> | `/` | **99** | **100** | **0.9 s** | **0** | 40 ms |
+> | `/properties?intent=sale` | **99** | **100** | **0.9 s** | **0** | 40 ms |
+>
+> axe-core: **0 violations** on 8 routes at both 375×812 and 1440×900 (`npm run a11y`, `VIEWPORT_WIDTH=375 npm run a11y`).
+>
+> The home page's LCP was 3.1 s before this pass. The culprit was a large `aria-hidden` CSS-background `<div>` behind the hero texture, which could not be discovered until the stylesheet resolved. Replacing the texture with a token-based CSS gradient moved LCP to the `<h1>` at 0.9 s and raised performance from 93 to 99.
 | Critical-path E2E tests | ≥ 5, passing in CI |
 | Unit tests on domain logic | ≥ 30 |
 | Time for a stranger to reach a working admin view | ≤ 3 clicks, ≤ 15 seconds |
@@ -698,7 +709,7 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 | Portal login redirects | ✅ Built HTML for `/admin/auth/login` and `/agent/auth/login` emits `login?next=/admin/overview` / `login?next=/agent/dashboard` with a 307 |
 | CI build simulation | ✅ `next build` succeeds with `DATABASE_URL=postgresql://user:pass@localhost:5432/db`, proving the build never touches the database (the `force-dynamic` marketing routes see to that) and that [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) will pass without secrets |
 | axe-core (WCAG 2.0/2.1 A+AA + best-practice) | ✅ **0 violations** on `/login`, `/signup`, `/forgot-password`, `/agent/auth/register`, run against the prerendered HTML in jsdom. `color-contrast` disabled (needs real layout); `/login`'s hydrated form inputs are not in the static HTML, so label coverage there comes from the `Field` primitive. |
-| Lighthouse a11y ≥ 95 | ⛔ **Not runnable in this sandbox.** The sandbox denies binding *any* TCP port (`EPERM` on `net.createServer().listen(0)`), so neither `next start` nor a static server can run, and Lighthouse has no URL to audit. Environment limitation, not a code issue — run `npm run build && npm start` then `npx lighthouse http://localhost:3000 --only-categories=accessibility` on a normal machine. |
+| Lighthouse a11y ≥ 95 | ✅ **100** on `/` and `/properties` (19 November 2026). *Historically blocked:* the earlier sandbox denied binding any TCP port, so this was unmeasurable then; it is measurable on a normal machine with `npm run build && PORT=3100 npm start`, then `npx lighthouse http://localhost:3100 --only-categories=performance,accessibility`. |
 
 **Environment limits hit during verification**
 
@@ -738,7 +749,7 @@ Each phase has a **goal**, a **scope**, **acceptance criteria**, and an **effort
 - [x] Every card navigates to a detail page.
 - [x] Real counts appear on the homepage; no fabricated numbers remain.
 - [x] Mobile filters usable at 375 px width.
-- [ ] Lighthouse performance ≥ 90 on `/` and `/properties` (mobile). **Unmeasured** — no Lighthouse run in this environment.
+- [x] Lighthouse performance ≥ 90 on `/` and `/properties` (mobile). **Measured 19 November 2026: 99 on both**, LCP 0.9 s, CLS 0.
 
 #### Phase 2 — Implementation progress
 

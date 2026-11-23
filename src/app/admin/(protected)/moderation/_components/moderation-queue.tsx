@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Check, ExternalLink, MessageSquareWarning, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { MaskedValue } from "@/components/demo/masked-value";
 import { decideListing } from "../actions";
 import type { ModerationListing } from "@/lib/admin/moderation";
 
@@ -21,7 +22,13 @@ function relative(date: Date) {
   return `${days} days ago`;
 }
 
-export function ModerationQueue({ listings }: { listings: ModerationListing[] }) {
+export function ModerationQueue({
+  listings,
+  redacted = false,
+}: {
+  listings: ModerationListing[];
+  redacted?: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const [reasonFor, setReasonFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -123,7 +130,13 @@ export function ModerationQueue({ listings }: { listings: ModerationListing[] })
                 </p>
 
                 <p className="mt-1 text-xs font-medium text-gray-500">
-                  {listing.agentName} ({listing.agentEmail}) ·{" "}
+                  {listing.agentName} (
+                  {redacted ? (
+                    <MaskedValue value={listing.agentEmail} />
+                  ) : (
+                    listing.agentEmail
+                  )}
+                  ) ·{" "}
                   {listing.agentStatus === "VERIFIED" ? "verified agent" : "unverified"} ·
                   submitted {relative(listing.submittedAt)}
                 </p>

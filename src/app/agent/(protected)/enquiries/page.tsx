@@ -2,11 +2,14 @@ import { MessageSquare } from "lucide-react";
 import { requireAgent } from "@/lib/auth/guards";
 import prisma from "@/lib/prisma";
 import { formatRelativeTime } from "@/lib/format";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { maskEmail, maskFreeText, maskName, maskPhone } from "@/lib/demo/mask";
 import { InquiryInbox } from "./_components/inquiry-inbox";
 import type { InquiryRow } from "./_components/inquiry-data";
 
 export default async function AgentEnquiriesPage() {
   const session = await requireAgent();
+  const redact = isDemoSessionUser(session.user);
 
   const inquiries = await prisma.inquiry.findMany({
     where: { listing: { agentId: session.user.id } },
@@ -26,12 +29,14 @@ export default async function AgentEnquiriesPage() {
 
   const rows: InquiryRow[] = inquiries.map((inquiry) => ({
     id: inquiry.id,
-    name: inquiry.name,
-    email: inquiry.email,
-    phone: inquiry.phone,
-    message: inquiry.message,
+    name: redact ? maskName(inquiry.name) : inquiry.name,
+    email: redact ? maskEmail(inquiry.email) : inquiry.email,
+    phone: redact ? maskPhone(inquiry.phone) : inquiry.phone,
+    message: redact
+      ? (maskFreeText(inquiry.message) ?? inquiry.message)
+      : inquiry.message,
     status: inquiry.status,
-    agentNote: inquiry.agentNote,
+    agentNote: redact ? maskFreeText(inquiry.agentNote) : inquiry.agentNote,
     listingTitle: inquiry.listing.title,
     listingId: inquiry.listing.id,
     age: formatRelativeTime(inquiry.createdAt),
@@ -43,7 +48,7 @@ export default async function AgentEnquiriesPage() {
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+          <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
             Agent
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -88,7 +93,7 @@ export default async function AgentEnquiriesPage() {
               </p>
             </div>
           ) : (
-            <InquiryInbox inquiries={rows} />
+            <InquiryInbox inquiries={rows} redacted={redact} />
           )}
         </section>
       </div>

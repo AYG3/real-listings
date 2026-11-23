@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { CheckCircle2, Clock3, MessageSquare, Search, XCircle } from "lucide-react";
 import { updateInquiry } from "../actions";
+import { MaskedValue } from "@/components/demo/masked-value";
 import type { InquiryRow, InquiryStatusValue } from "./inquiry-data";
 
 const statusMeta: Record<
@@ -26,7 +27,13 @@ const nextStatuses: Record<InquiryStatusValue, InquiryStatusValue[]> = {
   CLOSED: ["NEW"],
 };
 
-export function InquiryInbox({ inquiries }: { inquiries: InquiryRow[] }) {
+export function InquiryInbox({
+  inquiries,
+  redacted = false,
+}: {
+  inquiries: InquiryRow[];
+  redacted?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<InquiryStatusValue | "all">("all");
   const [activeId, setActiveId] = useState<string | null>(inquiries[0]?.id ?? null);
@@ -179,9 +186,16 @@ export function InquiryInbox({ inquiries }: { inquiries: InquiryRow[] }) {
                 <div className="flex gap-2">
                   <dt className="w-16 shrink-0 font-semibold text-gray-500">Email</dt>
                   <dd className="min-w-0 break-all">
-                    <a className="text-forest-700 underline" href={`mailto:${active.email}`}>
-                      {active.email}
-                    </a>
+                    {redacted ? (
+                      <MaskedValue value={active.email} />
+                    ) : (
+                      <a
+                        className="text-forest-700 underline"
+                        href={`mailto:${active.email}`}
+                      >
+                        {active.email}
+                      </a>
+                    )}
                   </dd>
                 </div>
               ) : null}
@@ -189,9 +203,16 @@ export function InquiryInbox({ inquiries }: { inquiries: InquiryRow[] }) {
                 <div className="flex gap-2">
                   <dt className="w-16 shrink-0 font-semibold text-gray-500">Phone</dt>
                   <dd>
-                    <a className="text-forest-700 underline" href={`tel:${active.phone}`}>
-                      {active.phone}
-                    </a>
+                    {redacted ? (
+                      <MaskedValue value={active.phone} />
+                    ) : (
+                      <a
+                        className="text-forest-700 underline"
+                        href={`tel:${active.phone}`}
+                      >
+                        {active.phone}
+                      </a>
+                    )}
                   </dd>
                 </div>
               ) : null}

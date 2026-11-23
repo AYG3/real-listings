@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { BadgeCheck, ShieldX } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { MaskedValue } from "@/components/demo/masked-value";
 import { decideAgent } from "../actions";
 import type { VerificationAgent } from "@/lib/admin/moderation";
 
 const statusStyles: Record<string, string> = {
-  VERIFIED: "bg-emerald-100 text-forest-800",
+  VERIFIED: "bg-forest-700/10 text-forest-800",
   PENDING: "bg-amber-100 text-amber-900",
   REJECTED: "bg-rose-100 text-rose-800",
   SUSPENDED: "bg-gray-200 text-gray-700",
@@ -21,7 +22,13 @@ function joined(date: Date) {
   });
 }
 
-export function VerificationList({ agents }: { agents: VerificationAgent[] }) {
+export function VerificationList({
+  agents,
+  redacted = false,
+}: {
+  agents: VerificationAgent[];
+  redacted?: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const [reasonFor, setReasonFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -81,8 +88,22 @@ export function VerificationList({ agents }: { agents: VerificationAgent[] }) {
                 </span>
               </div>
               <p className="mt-1 text-sm font-semibold text-gray-600">
-                {agent.agencyName ?? "No agency name"} · {agent.email}
-                {agent.phone ? ` · ${agent.phone}` : ""}
+                {agent.agencyName ?? "No agency name"} ·{" "}
+                {redacted ? (
+                  <MaskedValue value={agent.email} />
+                ) : (
+                  agent.email
+                )}
+                {agent.phone ? (
+                  <>
+                    {" · "}
+                    {redacted ? (
+                      <MaskedValue value={agent.phone} />
+                    ) : (
+                      agent.phone
+                    )}
+                  </>
+                ) : null}
               </p>
               <p className="mt-1 text-xs font-medium text-gray-500">
                 Joined {joined(agent.createdAt)} · {agent.listingCount} listing

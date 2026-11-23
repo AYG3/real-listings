@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
-import AgentNav from "./components/AgentNav";
+import { PortalShell } from "@/components/portal/portal-shell";
 import { requireAgent } from "@/lib/auth/guards";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { maskEmail } from "@/lib/demo/mask";
+
 
 interface AgentLayoutProps {
   children: ReactNode;
@@ -8,11 +11,26 @@ interface AgentLayoutProps {
 
 export default async function AgentLayout({ children }: AgentLayoutProps) {
   const session = await requireAgent();
+  const user = session.user as {
+    name: string;
+    email: string;
+    role?: string | null;
+    isDemo?: boolean | null;
+  };
+
+  const redact = isDemoSessionUser(user);
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      <AgentNav user={{ name: session.user.name, email: session.user.email }} />
-      <main className="flex-1">{children}</main>
-    </div>
+    <PortalShell
+      portal="agent"
+      user={{
+        name: user.name,
+        email: redact ? (maskEmail(user.email) ?? user.email) : user.email,
+        role: user.role,
+        isDemo: user.isDemo,
+      }}
+    >
+      {children}
+    </PortalShell>
   );
 }

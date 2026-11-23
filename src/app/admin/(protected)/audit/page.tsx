@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ScrollText } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getAuditFeed } from "@/lib/admin/moderation";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { redactAuditEntry } from "@/lib/demo/redact";
 
 const actionLabels: Record<string, string> = {
   LISTING_APPROVED: "Approved listing",
@@ -25,15 +27,18 @@ function stamp(date: Date) {
 }
 
 export default async function AdminAuditPage() {
-  await requireAdmin();
-  const entries = await getAuditFeed();
+  const session = await requireAdmin();
+  const redact = isDemoSessionUser(session.user);
+  const entries = (await getAuditFeed()).map((entry) =>
+    redact ? redactAuditEntry(entry) : entry,
+  );
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Admin
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -60,8 +65,9 @@ export default async function AdminAuditPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-8 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
+          <>
+          <div className="mt-8 hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm md:block">
+            <table className="w-full min-w-[44rem] text-left text-sm">
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-bold">When</th>
@@ -104,6 +110,45 @@ export default async function AdminAuditPage() {
               </tbody>
             </table>
           </div>
+
+          <ul className="mt-6 space-y-3 md:hidden">
+            {entries.map((entry) => (
+              <li
+                key={entry.id}
+                className="rounded-card border border-ink-900/10 bg-white p-4 shadow-card"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-bold text-ink-900">
+                    {actionLabels[entry.action] ?? entry.action}
+                  </p>
+                  <time className="shrink-0 text-xs font-medium text-muted-500">
+                    {stamp(entry.createdAt)}
+                  </time>
+                </div>
+
+                {entry.note ? (
+                  <p className="mt-1 text-xs text-muted-500">“{entry.note}”</p>
+                ) : null}
+
+                <dl className="mt-3 grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-1.5 text-xs">
+                  <dt className="font-semibold text-muted-500">Actor</dt>
+                  <dd className="min-w-0 break-words font-medium text-ink-700">
+                    {entry.actorName}
+                  </dd>
+                  <dt className="font-semibold text-muted-500">Target</dt>
+                  <dd className="min-w-0 break-words font-medium text-ink-700">
+                    {entry.targetName}{" "}
+                    <span className="text-muted-500">({entry.targetType})</span>
+                  </dd>
+                  <dt className="font-semibold text-muted-500">Change</dt>
+                  <dd className="font-medium text-ink-700">
+                    {entry.fromStatus ?? "—"} → {entry.toStatus ?? "—"}
+                  </dd>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          </>
         )}
       </div>
     </div>

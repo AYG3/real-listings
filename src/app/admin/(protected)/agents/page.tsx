@@ -2,13 +2,18 @@ import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, Clock3, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getVerificationQueue } from "@/lib/admin/moderation";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { redactVerificationAgent } from "@/lib/demo/redact";
 import { VerificationList } from "../moderation/_components/verification-list";
 
 const statusOrder = ["PENDING", "VERIFIED", "REJECTED", "SUSPENDED"];
 
 export default async function AgentsPage() {
-  await requireAdmin();
-  const agents = await getVerificationQueue();
+  const session = await requireAdmin();
+  const redact = isDemoSessionUser(session.user);
+  const agents = (await getVerificationQueue()).map((agent) =>
+    redact ? redactVerificationAgent(agent) : agent,
+  );
 
   const counts = {
     total: agents.length,
@@ -17,11 +22,11 @@ export default async function AgentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Admin
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -73,6 +78,7 @@ export default async function AgentsPage() {
             </p>
           ) : (
             <VerificationList
+              redacted={redact}
               agents={[...agents].sort(
                 (a, b) =>
                   statusOrder.indexOf(a.agentStatus ?? "PENDING") -

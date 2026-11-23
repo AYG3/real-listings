@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
-import AdminNavbar from "./components/AdminNavbar";
+import { PortalShell } from "@/components/portal/portal-shell";
 import { requireAdmin } from "@/lib/auth/guards";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import { maskEmail } from "@/lib/demo/mask";
+
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -8,13 +11,26 @@ interface AdminLayoutProps {
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const session = await requireAdmin();
+  const user = session.user as {
+    name: string;
+    email: string;
+    role?: string | null;
+    isDemo?: boolean | null;
+  };
+
+  const redact = isDemoSessionUser(user);
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      <AdminNavbar
-        user={{ name: session.user.name, email: session.user.email }}
-      />
-      <main className="flex-1">{children}</main>
-    </div>
+    <PortalShell
+      portal="admin"
+      user={{
+        name: user.name,
+        email: redact ? (maskEmail(user.email) ?? user.email) : user.email,
+        role: user.role,
+        isDemo: user.isDemo,
+      }}
+    >
+      {children}
+    </PortalShell>
   );
 }

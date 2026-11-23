@@ -115,11 +115,11 @@ export default async function AdminOverviewPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Admin
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -167,7 +167,7 @@ export default async function AdminOverviewPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
               <h2 className="text-xl font-bold text-gray-950">New listings</h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -241,7 +241,7 @@ export default async function AdminOverviewPage() {
             </div>
           </div>
 
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <div>
               <h2 className="mb-4 text-xl font-bold text-gray-950">Quick actions</h2>
               <div className="grid gap-3">

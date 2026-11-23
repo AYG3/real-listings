@@ -3,7 +3,11 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "@/lib/prisma";
 import { nextCookies } from "better-auth/next-js";
 
-const fallbackOrigins = ["http://localhost:3000", "http://localhost:3005"];
+// `BETTER_AUTH_URL` is the canonical origin: Better Auth derives the OAuth
+// `redirect_uri` from it, so a value that disagrees with the port `next dev`
+// binds to sends Google back to an address nothing is listening on. The one
+// fallback below keeps a fresh clone working before `.env.local` exists.
+const fallbackOrigins = ["http://localhost:3000"];
 
 function resolveTrustedOrigins() {
   const configured = (process.env.TRUSTED_ORIGINS ?? "")
@@ -20,8 +24,9 @@ function resolveTrustedOrigins() {
   ];
 }
 
-const googleClientId =
-  process.env.GOOGLE_CLIENT_ID ?? process.env.CLIENT_ID;
+// Documented names first; the legacy CLIENT_ID/CLIENT_SECRET pair still works
+// so an existing local env file keeps signing in.
+const googleClientId = process.env.GOOGLE_CLIENT_ID ?? process.env.CLIENT_ID;
 const googleClientSecret =
   process.env.GOOGLE_CLIENT_SECRET ?? process.env.CLIENT_SECRET;
 

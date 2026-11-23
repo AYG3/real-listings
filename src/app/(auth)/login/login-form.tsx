@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth/authClient";
@@ -9,6 +10,8 @@ import {
   CredentialsForm,
 } from "@/components/auth/credentials-form";
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { buttonStyles } from "@/components/ui/button";
 
 const roleHomes = {
   ADMIN: "/admin/overview",
@@ -39,6 +42,15 @@ export default function LoginForm() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: session } = authClient.useSession();
+  const currentUser = session?.user as
+    | { name?: string | null; email?: string | null; role?: Role }
+    | undefined;
+  const currentRole = (currentUser?.role ?? "BUYER") as Role;
+  // A portal deep link keeps its gate even when another role is already signed
+  // in — offer the switch instead of silently redirecting to the wrong place.
+  const gateBlocked = Boolean(gate && currentRole !== gate);
 
   async function handleSubmit(credentials: { email: string; password: string }) {
     setSubmitting(true);
@@ -76,6 +88,38 @@ export default function LoginForm() {
 
   return (
     <>
+      {currentUser ? (
+        <div className="mb-6 rounded-card border border-forest-700/20 bg-emerald-50/60 p-4">
+          <p className="text-sm font-semibold text-forest-900">
+            {gateBlocked
+              ? `Signed in as ${currentUser.name ?? "another account"}`
+              : `You’re signed in as ${currentUser.name ?? "your account"}`}
+          </p>
+          <p className="mt-0.5 text-xs font-medium text-muted-500">
+            {gateBlocked
+              ? `This page needs ${gate === "ADMIN" ? "admin" : "agent"} access. Sign out to use a different account.`
+              : `${currentRole === "ADMIN" ? "Admin" : currentRole === "AGENT" ? "Agent" : "Buyer"}${currentUser.email ? ` · ${currentUser.email}` : ""}`}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {!gateBlocked ? (
+              <Link
+                href={next ?? roleHomes[currentRole]}
+                className={buttonStyles({ size: "sm" })}
+              >
+                Continue
+              </Link>
+            ) : null}
+            <SignOutButton variant="secondary" size="sm" />
+            <Link
+              href="/"
+              className={buttonStyles({ variant: "ghost", size: "sm" })}
+            >
+              Go home
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       <h1 className="text-h2 font-bold text-ink-900">
         {gate === "ADMIN"
           ? "Admin sign in"

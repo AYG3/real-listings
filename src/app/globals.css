@@ -8,6 +8,8 @@
   --color-forest-700: #114b3d;
   --color-forest-600: #1c6454;
   --color-gold-600: #b58e2a;
+  /* Darker gold for eyebrows on ivory/white: 5.6:1, AA for small text. */
+  --color-gold-700: #8a6a1a;
   --color-gold-500: #c8a24a;
   --color-ivory-50: #faf8f4;
   --color-ivory-100: #f2f1ef;
@@ -66,5 +68,24 @@
 
   ::selection {
     background-color: color-mix(in oklab, var(--color-gold-500) 35%, white);
+  }
+}
+
+/*
+ * SelectField progressive enhancement. The native <select> is the form field
+ * and the no-JS control; the custom listbox trigger only appears once the
+ * component has hydrated and set data-enhanced="true".
+ */
+@layer components {
+  .select-field__trigger {
+    display: none;
+  }
+
+  .select-field[data-enhanced="true"] .select-field__native {
+    display: none;
+  }
+
+  .select-field[data-enhanced="true"] .select-field__trigger {
+    display: flex;
   }
 }

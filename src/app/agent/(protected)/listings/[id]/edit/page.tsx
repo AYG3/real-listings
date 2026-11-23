@@ -36,7 +36,7 @@ export default async function EditListingPage({ params }: PageProps) {
       <div className="mx-auto w-full max-w-5xl">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Agent
             </p>
             <h1 className="mt-2 flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight text-gray-950">

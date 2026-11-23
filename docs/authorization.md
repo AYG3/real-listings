@@ -50,3 +50,46 @@ guard costs no extra query.
   [`src/lib/validation`](../src/lib/validation) **before** it writes. This is
   enforced by [`actions.test.ts`](../src/lib/validation/actions.test.ts), which
   fails the build if an action gains a write without a parse or a guard.
+
+## Demo mode is three guarantees, not one
+
+The read-only predicate above is only the first. A demo session also promises
+that **personal data never reaches the browser**, and that the dataset can be
+reset. Those are enforced separately:
+
+| Guarantee | Enforced by | Where |
+| --- | --- | --- |
+| Nothing can be changed | `isDemoSessionUser` at every mutation site | server actions |
+| Personal data is masked | `src/lib/demo/mask.ts` + `src/lib/demo/redact.ts` | server components, before props cross the RSC boundary |
+| Data resets | `POST /api/demo/reset` with `DEMO_RESET_SECRET` | `scripts/demo-reset.ts` |
+
+Masking is deliberately **not** a CSS blur or a client-side filter: any value
+sent to the browser is recoverable in DevTools. Server components map the rows
+they read and pass only masked values to client components:
+
+```ts
+const redact = isDemoSessionUser(session.user);
+const users = (await getAdminUsers(session.user.id)).map((user) =>
+  redact ? redactAdminUser(user) : user,
+);
+```
+
+The masked shapes are fixed-width so the original length does not leak:
+
+| Field | Real | Demo |
+| --- | --- | --- |
+| Email | `adaeze.okafor@alara.ng` | `a••••••@alara.ng` |
+| Phone | `+234 801 234 5678` | `+234 ••• ••• 678` |
+| Name | `Chidi Okafor` | `Chidi O.` |
+| Enquiry body | text with an email/number | same text, embedded values masked |
+
+What stays visible is what the demo is for: listing content, moderation state,
+counts, dates, and every action. A masked value renders through
+[`MaskedValue`](../src/components/demo/masked-value.tsx), which adds a lock and
+a "Hidden in demo mode" label so the redaction reads as policy rather than as
+broken data.
+
+Real admin sessions take the exact same code path with `redact === false`, so
+the mappers are no-ops for them. `src/lib/demo/mask.test.ts` covers the masking
+edges (empty, short local part, subdomain, spaced phone, prose that contains a
+date or a price).

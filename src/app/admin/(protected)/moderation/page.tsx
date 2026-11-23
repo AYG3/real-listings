@@ -2,6 +2,11 @@ import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, Clock3 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getModerationQueue, getVerificationQueue } from "@/lib/admin/moderation";
+import { isDemoSessionUser } from "@/lib/demo/guard";
+import {
+  redactModerationListing,
+  redactVerificationAgent,
+} from "@/lib/demo/redact";
 import { ModerationQueue } from "./_components/moderation-queue";
 import { VerificationList } from "./_components/verification-list";
 
@@ -10,22 +15,26 @@ type PageProps = {
 };
 
 export default async function AdminModerationPage({ searchParams }: PageProps) {
-  await requireAdmin();
+  const session = await requireAdmin();
+  const redact = isDemoSessionUser(session.user);
   const tab = (await searchParams).tab === "agents" ? "agents" : "listings";
 
-  const [listings, agents] = await Promise.all([
+  const [queue, agents] = await Promise.all([
     getModerationQueue(),
     getVerificationQueue(),
   ]);
 
-  const pendingAgents = agents.filter((agent) => agent.agentStatus === "PENDING");
+  const listings = redact ? queue.map(redactModerationListing) : queue;
+  const verifiedAgents = redact ? agents.map(redactVerificationAgent) : agents;
+
+  const pendingAgents = verifiedAgents.filter((agent) => agent.agentStatus === "PENDING");
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
+    <div className="bg-surface px-4 py-6 text-gray-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-forest-700">
+            <p className="hidden text-sm font-semibold uppercase tracking-[0.16em] text-forest-700 lg:block">
               Admin
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -89,7 +98,7 @@ export default async function AdminModerationPage({ searchParams }: PageProps) {
 
         <section className="mt-6">
           {tab === "listings" ? (
-            <ModerationQueue listings={listings} />
+            <ModerationQueue listings={listings} redacted={redact} />
           ) : pendingAgents.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
               <BadgeCheck className="mx-auto h-8 w-8 text-forest-700" aria-hidden="true" />
@@ -101,7 +110,7 @@ export default async function AdminModerationPage({ searchParams }: PageProps) {
               </p>
             </div>
           ) : (
-            <VerificationList agents={pendingAgents} />
+            <VerificationList agents={pendingAgents} redacted={redact} />
           )}
         </section>
       </div>
